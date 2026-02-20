@@ -1,4 +1,4 @@
-# Set-up Guide
+# Setup Guide
 
 ## Download Prerequisite
 Install node.js: https://nodejs.org/en/download
@@ -19,6 +19,9 @@ npm install
 cd backend
 node index.js
 ```
+
+## Set up the Database
+Copy paste the SQL code in the setup file in your MySQL terminal/workbench
 
 ## Run the Frontend
 ```
