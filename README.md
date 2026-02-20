@@ -14,7 +14,13 @@ cd pawgress
 npm install
 ```
 
-## Run the Server
+## Run the Backend
+```
+cd backend
+node index.js
+```
+
+## Run the Frontend
 ```
 npm run dev
 ```
