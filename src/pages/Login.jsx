@@ -1,46 +1,42 @@
 import { useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function Login(){
-  const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const {
+    isLoading, // Loading state, the SDK needs to reach Auth0 on load
+    isAuthenticated,
+    error,
+    loginWithRedirect: login, // Starts the login flow
+    logout: auth0Logout, // Starts the logout flow
+    user, // User profile
+  } = useAuth0();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-  }
+  const signup = () =>
+    login({ authorizationParams: { screen_hint: "signup" } });
 
-  return (
-    <div className="container">
-      <h1>Welcome to Pawgress!</h1>
-      <h2>{isLogin ? "Login" : "Sign Up"}</h2>
+  const logout = () =>
+    auth0Logout({ logoutParams: { returnTo: window.location.origin } });
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="username"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+  if (isLoading) return "Loading...";
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+  return isAuthenticated ? (
+    <>
+      <p>Logged in as {user.email}</p>
 
-        <button type="submit">
-          {isLogin ? "Login" : "Sign Up"}
-        </button>
-      </form>
+      <h1>User Profile</h1>
 
-      <button className="toggle" onClick={() => setIsLogin(!isLogin)}>
-        {isLogin
-          ? "Don't have an account? Sign Up"
-          : "Already have an account? Login"}
-      </button>
-    </div>
+      <pre>{JSON.stringify(user, null, 2)}</pre>
+
+      <button onClick={logout}>Logout</button>
+    </>
+  ) : (
+    <>
+      {error && <p>Error: {error.message}</p>}
+
+      <button onClick={signup}>Signup</button>
+
+      <button onClick={login}>Login</button>
+    </>
   );
 }
 
