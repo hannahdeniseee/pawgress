@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 
 function Login(){
   const {
-    isLoading, // Loading state, the SDK needs to reach Auth0 on load
+    isLoading,
     isAuthenticated,
     error,
-    loginWithRedirect: login, // Starts the login flow
-    logout: auth0Logout, // Starts the logout flow
-    user, // User profile
+    loginWithRedirect: login, 
+    logout: auth0Logout,
+    user,
   } = useAuth0();
 
   const signup = () =>
@@ -17,15 +17,40 @@ function Login(){
   const logout = () =>
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
 
+    useEffect(() => {
+    if (isAuthenticated && user) {
+      fetch("http://localhost:5000/api/users/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          auth0_id: user.sub,
+          username: user.nickname || user.name || user.email,
+          avatar_url: user.picture || null,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("User saved to DB:", data);
+        })
+        .catch((err) => {
+          console.error("Error saving user to DB:", err);
+        });
+    }
+  }, [isAuthenticated, user]);
+
   if (isLoading) return "Loading...";
 
   return isAuthenticated ? (
     <>
-      <p>Logged in as {user.email}</p>
-
-      <h1>User Profile</h1>
-
-      <pre>{JSON.stringify(user, null, 2)}</pre>
+      <img
+        src={user.picture}
+        alt={user.name}
+        style={{ width: "100px", height: "100px", borderRadius: "50%", marginBottom: "15px", objectFit: "cover" }}
+      />
+      <h2>{user.nickname}</h2>
+      <p><strong>Email:</strong> {user.email}</p>
 
       <button onClick={logout}>Logout</button>
     </>
