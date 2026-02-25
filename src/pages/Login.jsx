@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import Todo from "./Todo.jsx"; 
 
 function Login(){
   const {
@@ -53,6 +54,7 @@ function Login(){
       <p><strong>Email:</strong> {user.email}</p>
 
       <button onClick={logout}>Logout</button>
+       <Todo />
     </>
   ) : (
     <>
