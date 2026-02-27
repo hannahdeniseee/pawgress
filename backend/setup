@@ -1,0 +1,10 @@
+CREATE DATABASE pawgress;
+
+USE pawgress;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  auth0_id VARCHAR(255) UNIQUE,
+  username VARCHAR(255),
+  avatar_url VARCHAR(255)
+);

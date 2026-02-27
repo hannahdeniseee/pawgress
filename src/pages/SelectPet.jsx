@@ -1,31 +1,42 @@
 import { useState, useEffect } from "react";
+import goldenDog from "../assets/golden-retriever-dog.svg";
+import dalmatianDog from "../assets/dalmatian-dog.svg";
+import beagleDog from "../assets/beagle-dog.svg";
+
+import whiteCat from "../assets/white-cat.svg";
+import blackCat from "../assets/black-cat.svg";
+import orangeCat from "../assets/orange-cat.svg";
+
+import blueBird from "../assets/blue-bird.svg";
+import yellowBird from "../assets/yellow-bird.svg";
+import pinkBird from "../assets/pink-bird.svg";
 
 const petData = {
   dog: {
     name: "Dog",
-    image: "../assets/golden-retriever-dog.png",
+    image: goldenDog,
     breeds: [
-      { name: "Golden Retriever", image: "../assets/golden-retriever-dog.svg" },
-      { name: "Dalmatian", image: "../assets/dalmatian-dog.svg" },
-      { name: "Beagle", image: "../assets/beagle-dog.svg" },
+      { name: "Golden Retriever", image: goldenDog },
+      { name: "Dalmatian", image: dalmatianDog },
+      { name: "Beagle", image: beagleDog },
     ],
   },
   cat: {
     name: "Cat",
-    image: "../assets/white-cat.svg",
+    image: whiteCat,
     breeds: [
-      { name: "Black Cat", image: "../assets/black-cat.svg" },
-      { name: "Orange Cat", image: "../assets/orange-cat.svg" },
-      { name: "White Cat", image: "../assets/white-cat.svg" }
+      { name: "Black Cat", image: blackCat },
+      { name: "Orange Cat", image: orangeCat },
+      { name: "White Cat", image: whiteCat }
     ],
   },
   bird: {
     name: "Bird",
-    image: "../assets/blue-bird.svg",
+    image: blueBird,
     breeds: [
-      { name: "Yellow Bird", image: "../assets/yellow-bird.svg" },
-      { name: "Pink Bird", image: "../assets/pink-bird.svg" },
-      { name: "Blue Bird", image: "../assets/blue-bird.svg" }
+      { name: "Yellow Bird", image: yellowBird },
+      { name: "Pink Bird", image: pinkBird },
+      { name: "Blue Bird", image: blueBird }
     ],
   },
 };
