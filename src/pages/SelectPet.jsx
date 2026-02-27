@@ -87,7 +87,8 @@ export default function SelectPet() {
                 gap: "10px"
               }}
             >
-              <img src={data.image} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} />
+              {/* <img src={data.image} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} /> */}
+              <img src={new URL(data.image, import.meta.url).href} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} />
               <span style={{ fontWeight: "bold", color: "#222" }}>{data.name}</span>
             </button>
           ))}
@@ -119,7 +120,7 @@ export default function SelectPet() {
             </select>
             {currentBreedImage && (
               <img 
-                src={currentBreedImage} 
+                src={new URL(currentBreedImage, import.meta.url).href} 
                 alt="Preview" 
                 style={{ width: "50px", height: "50px", borderRadius: "8px", objectFit: "cover", border: "1px solid #ccc" }}
                 onError={(e) => { e.target.style.display = 'none'; }}
@@ -165,7 +166,7 @@ export default function SelectPet() {
             boxShadow: "0 3px 6px rgba(0,0,0,0.05)"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <img src={pet.image} alt={pet.breed} style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} />
+              <img src={new URL(pet.image, import.meta.url).href} alt={pet.breed} style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} />
               <div>
                 <span style={{ fontSize: "16px", color: "#222", fontWeight: "bold", marginRight: "10px" }}>{pet.breed}</span>
                 <span style={{ fontSize: "11px", fontWeight: "bold", padding: "2px 8px", borderRadius: "12px", backgroundColor: "#4CAF50", color: "#fff", verticalAlign: "middle" }}>
