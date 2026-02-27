@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./PomodoroTimer.css";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const DEFAULT_FOCUS = 25;
 const DEFAULT_SHORT_BREAK = 5;
@@ -210,7 +211,7 @@ export default function PomodoroTimer({ user }) {
   };
   const col = modeColors[mode];
 
-  const modeLabel = mode === "focus" ? "time to LOCK IN" : mode === "short" ? "sure go ADHD bud" : "lazy ass mofo";
+  const modeLabel = mode === "focus" ? "Time to work!" : mode === "short" ? "Take a breather." : "Some you time.";
 
   return (
     <div className="pomo-root" style={{ "--accent": col.accent, "--bg-tint": col.bg, "--tab-active": col.tab }}>
@@ -282,10 +283,10 @@ export default function PomodoroTimer({ user }) {
             {/* Controls */}
             <div className="controls">
               <button className="os-btn primary" onClick={handleStartPause}>
-                {running ? "⏸ Pause" : secondsLeft < total ? "▶ I'M READY" : "▶ I'M READY"}
+                {running ? "⏸ Pause" : secondsLeft < total ? "▶ START" : "▶ START"}
               </button>
               <button className="os-btn ghost" onClick={handleCancel}>
-                ✕ Nah nvm
+                ✕ Cancel
               </button>
             </div>
 
@@ -303,7 +304,7 @@ export default function PomodoroTimer({ user }) {
       {notification && (
         <div className="notif-overlay">
           <div className={`notif-window ${notification.type}`}>
-            <TitleBar title={notification.type === "focus" ? "GOATED" : "It's time to lock in!"} onSettings={() => setNotification(null)} />
+            <TitleBar title={notification.type === "focus" ? "Congrats!" : "It's time to lock in!"} onSettings={() => setNotification(null)} />
             <div className="notif-body">
               <div className="notif-emoji">
                 {notification.type === "focus" ? "🎉" : "🐾"}
@@ -315,7 +316,7 @@ export default function PomodoroTimer({ user }) {
                     <span className="n-pill coin">+{notification.coins} 🪙 coins</span>
                     <span className="n-pill xp">+{notification.xp} ✨ XP</span>
                   </div>
-                  <p className="notif-sub">Go adhd or something!</p>
+                  <p className="notif-sub">Time to take a break!</p>
                   <div className="notif-actions">
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("short"); }}>Short Break</button>
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("long"); }}>Long Break</button>

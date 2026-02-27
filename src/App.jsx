@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import Login from './pages/Login.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
+import Todo from "./pages/Todo.jsx";
 
 function AppContent() {
-  const { isLoading, isAuthenticated, user } = useAuth0();
+  const { isLoading, isAuthenticated, user, logout } = useAuth0();
   const [dbUser, setDbUser] = useState(null);
 
   useEffect(() => {
@@ -26,10 +27,33 @@ function AppContent() {
 
   if (isLoading) return <div style={{ color: '#f0ebe6', fontFamily: 'sans-serif', padding: '2rem' }}>Loading...</div>;
 
-  return isAuthenticated ? (
-    <PomodoroTimer user={dbUser || user} />
-  ) : (
-    <Login />
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  const currentUser = dbUser || user;
+
+  return (
+    <>
+      <img
+        src={currentUser.picture}
+        alt={currentUser.name}
+        style={{ width: 100, borderRadius: "50%" }}
+      />
+      <h2>{currentUser.nickname || currentUser.username}</h2>
+      <p>{currentUser.email}</p>
+
+      <button
+        onClick={() =>
+          logout({ logoutParams: { returnTo: window.location.origin } })
+        }
+      >
+        Logout
+      </button>
+
+      <PomodoroTimer user={currentUser} />
+      <Todo />
+    </>
   );
 }
 

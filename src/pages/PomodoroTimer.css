@@ -37,7 +37,6 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 440px;
   background: var(--window-bg);
   border: 2.5px solid var(--border);
   border-radius: 16px;
@@ -174,7 +173,7 @@
 /* Ring ───── */
 .ring-wrap {
   position: relative;
-  width: 260px;
+  /*width: 260px;*/
   height: 260px;
 }
 .ring-svg {
@@ -340,7 +339,6 @@
 }
 .notif-window {
   width: 100%;
-  max-width: 360px;
   background: white;
   border: 2.5px solid var(--border);
   border-radius: 16px;
