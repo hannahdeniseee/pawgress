@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import Login from './pages/Login.jsx'
-import PetSelect from './pages/PetSelect.jsx'
+import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
 
 function AppContent() {
@@ -31,7 +31,7 @@ function AppContent() {
     <PomodoroTimer user={dbUser || user} />
   ) : (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <PetSelect />
+      <SelectPet />
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
         <p style={{ fontFamily: 'Arial', color: '#666' }}>Login to save your progress</p>
         <Login />
