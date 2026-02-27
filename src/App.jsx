@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import Login from './pages/Login.jsx'
 import PetSelect from './pages/PetSelect.jsx'
+import PomodoroTimer from './pages/PomodoroTimer.jsx'
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -27,12 +28,10 @@ function AppContent() {
   if (isLoading) return <div style={{ color: '#f0ebe6', fontFamily: 'sans-serif', padding: '2rem' }}>Loading...</div>;
 
   return isAuthenticated ? (
-    <PetSelect />
+    <PomodoroTimer user={dbUser || user} />
   ) : (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      
       <PetSelect />
-      
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
         <p style={{ fontFamily: 'Arial', color: '#666' }}>Login to save your progress</p>
         <Login />

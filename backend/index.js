@@ -46,6 +46,46 @@ app.post('/api/users/add', async (req, res) => {
   }
 });
 
+// Award virtual currency and XP on focus session completion (REQ-4, REQ-5)
+// Rewards scale with focus duration: coins = focusMinutes * 2, xp = focusMinutes * 3
+app.post('/api/sessions/complete', async (req, res) => {
+  const { user_id, focus_minutes } = req.body;
+
+  if (!user_id || !focus_minutes) {
+    return res.status(400).json({ error: 'Missing user_id or focus_minutes' });
+  }
+
+  const coins = Math.floor(focus_minutes * 2);
+  const xp = Math.floor(focus_minutes * 3);
+
+  try {
+    // Record the completed session
+    await pool.execute(
+      `INSERT INTO sessions (user_id, focus_minutes, coins_awarded, xp_awarded, completed_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [user_id, focus_minutes, coins, xp]
+    );
+
+    // Update user totals
+    await pool.execute(
+      `UPDATE users SET coins = coins + ?, xp = xp + ? WHERE id = ?`,
+      [coins, xp, user_id]
+    );
+
+    // Count sessions completed today (REQ-6)
+    const [rows] = await pool.execute(
+      `SELECT COUNT(*) AS sessions_today FROM sessions
+       WHERE user_id = ? AND DATE(completed_at) = CURDATE()`,
+      [user_id]
+    );
+
+    res.json({ coins, xp, sessions_today: rows[0].sessions_today });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // Start backend server
 app.listen(process.env.PORT, () => {
   console.log(`Backend running on port ${process.env.PORT}`);
