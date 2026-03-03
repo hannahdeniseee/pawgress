@@ -36,8 +36,6 @@
 .os-window {
   position: relative;
   z-index: 10;
-  width: 100%;
-  max-width: 440px;
   background: var(--window-bg);
   border: 2.5px solid var(--border);
   border-radius: 16px;

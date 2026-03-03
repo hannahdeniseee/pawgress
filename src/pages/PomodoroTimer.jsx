@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import "./PomodoroTimer.css";
+import "../styles/PomodoroTimer.css";
 
 const DEFAULT_FOCUS = 25;
 const DEFAULT_SHORT_BREAK = 5;
@@ -315,7 +315,7 @@ export default function PomodoroTimer({ user }) {
                     <span className="n-pill coin">+{notification.coins} 🪙 coins</span>
                     <span className="n-pill xp">+{notification.xp} ✨ XP</span>
                   </div>
-                  <p className="notif-sub">Go adhd or something!</p>
+                  <p className="notif-sub">Go take a break!</p>
                   <div className="notif-actions">
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("short"); }}>Short Break</button>
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("long"); }}>Long Break</button>

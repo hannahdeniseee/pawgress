@@ -3,6 +3,7 @@ import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import Login from './pages/Login.jsx'
 import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
+import PetShop from './pages/PetShop.jsx'
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -33,6 +34,7 @@ function AppContent() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <SelectPet />
     </div>
+    <PetShop user={dbUser || user}></PetShop>
     </>
   ) : (
     <div style={{ marginTop: '20px', textAlign: 'center' }}>
