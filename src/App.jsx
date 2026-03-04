@@ -15,9 +15,9 @@ function AppContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          auth0_id: user.sub,
+          auth0Id: user.sub,
           username: user.nickname || user.name || user.email,
-          avatar_url: user.picture || null,
+          avatarUrl: user.picture || null,
         }),
       })
         .then((res) => res.json())
@@ -34,7 +34,8 @@ function AppContent() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <SelectPet />
     </div>
-    <PetShop user={dbUser || user}></PetShop>
+    {dbUser && <PetShop userId={dbUser.id} />}
+    <Login />
     </>
   ) : (
     <div style={{ marginTop: '20px', textAlign: 'center' }}>

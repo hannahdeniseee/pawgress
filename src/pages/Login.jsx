@@ -12,6 +12,8 @@ function Login(){
     user,
   } = useAuth0();
 
+  const [dbUser, setDbUser] = useState(null);
+
   const signup = () =>
     login({ authorizationParams: { screen_hint: "signup" } });
 
@@ -26,18 +28,14 @@ function Login(){
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          auth0_id: user.sub,
+          auth0Id: user.sub,
           username: user.nickname || user.name || user.email,
-          avatar_url: user.picture || null,
+          avatarUrl: user.picture || null,
         }),
       })
         .then((res) => res.json())
-        .then((data) => {
-          console.log("User saved to DB:", data);
-        })
-        .catch((err) => {
-          console.error("Error saving user to DB:", err);
-        });
+        .then((data) => setDbUser(data))
+        .catch((err) => console.error("Error saving user:", err));
     }
   }, [isAuthenticated, user]);
 

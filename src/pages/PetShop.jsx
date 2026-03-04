@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/PetShop.css";
 
 import pinkBow from "../assets/pink-bow.svg";
@@ -14,16 +14,28 @@ const SHOP_ITEMS = [
 ];
 
 const INITIAL_STATE = {
-  coins: 200,
   inventory: [],
 };
 
-export default function PetAccessoryShop() {
-  const [coins, setCoins] = useState(INITIAL_STATE.coins);
+export default function PetAccessoryShop({ userId }) {
+  const [coins, setCoins] = useState(0);
   const [inventory, setInventory] = useState(INITIAL_STATE.inventory);
   const [activeTab, setActiveTab] = useState("shop");
   const [message, setMessage] = useState("");
 
+  useEffect(() => {
+  if (!userId) return;
+
+  async function loadUser() {
+    const res = await fetch(`http://localhost:5000/api/users/${userId}`);
+    const data = await res.json();
+
+    setCoins(data.coins);
+    setInventory(data.inventory || []);
+  }
+    loadUser();
+  }, [userId]);
+  
   function getItem(id) {
     return SHOP_ITEMS.find((i) => i.id === id);
   }
@@ -37,13 +49,24 @@ export default function PetAccessoryShop() {
     setTimeout(() => setMessage(""), 2500);
   }
 
-  function buyItem(item) {
+  async function buyItem(item) {
     if (owns(item.id)) return showMessage("You already own this!");
     if (coins < item.price) return showMessage("Not enough coins!");
 
-    setCoins((c) => c - item.price);
-    setInventory((inv) => [...inv, item.id]);
-    showMessage(`Bought ${item.name}!`);
+    try {
+      const res = await fetch(`http://localhost:5000/api/users/${userId}/coins`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: -item.price }), 
+      });
+
+      const data = await res.json();
+      setCoins(data.coins);
+      setInventory((inv) => [...inv, item.id]);
+      showMessage(`Bought ${item.name}!`);
+    } catch {
+      showMessage("Network error, try again.");
+    }
   }
 
   return (

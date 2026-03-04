@@ -1,92 +1,73 @@
 import express from "express";
 import cors from "cors";
-import mysql from "mysql2/promise";
-import dotenv from "dotenv"; 
-
-// const express = require('express');
-// const cors = require('cors');
-// const mysql = require('mysql2/promise');
-// require('dotenv').config();
+import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
 dotenv.config();
 
+const adapter = new PrismaMariaDb({
+  host: "localhost",
+  user: "root",
+  database: "pawgress",
+});
+
+export const prisma = new PrismaClient({ adapter });
+
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-// Create MySQL pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+app.post("/api/users/add", async (req, res) => {
+  const { auth0Id, username, avatarUrl } = req.body;
 
-// Save Auth0 user on first login
-app.post('/api/users/add', async (req, res) => {
-  const { auth0_id, username, avatar_url } = req.body;
+  if (!auth0Id) {
+    return res.status(400).json({ error: "auth0Id is required" });
+  }
 
   try {
-    // Insert user if not exists
-    await pool.execute(
-      `INSERT IGNORE INTO users (auth0_id, username, avatar_url) VALUES (?, ?, ?)`,
-      [auth0_id, username, avatar_url]
-    );
+    const user = await prisma.user.upsert({
+      where: { auth0Id },
+      update: { username },
+      create: { auth0Id, username, avatarUrl, coins: 100},
+    });
 
-    // Retrieve the saved user
-    const [rows] = await pool.execute(
-      `SELECT id, username, avatar_url FROM users WHERE auth0_id = ?`,
-      [auth0_id]
-    );
-
-    res.json(rows[0]);
+    res.json(user);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: "User save error" });
   }
 });
 
-// Award virtual currency and XP on focus session completion (REQ-4, REQ-5)
-// Rewards scale with focus duration: coins = focusMinutes * 2, xp = focusMinutes * 3
-app.post('/api/sessions/complete', async (req, res) => {
-  const { user_id, focus_minutes } = req.body;
+app.get("/api/users/:id", async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: Number(req.params.id) }
+  });
 
-  if (!user_id || !focus_minutes) {
-    return res.status(400).json({ error: 'Missing user_id or focus_minutes' });
-  }
+  res.json({
+    ...user,
+    inventory: [], // placeholder until you add inventory to the schema
+  });
 
-  const coins = Math.floor(focus_minutes * 2);
-  const xp = Math.floor(focus_minutes * 3);
+});
+
+app.patch("/api/users/:id/coins", async (req, res) => {
+  const { id } = req.params;
+  const { amount } = req.body;
 
   try {
-    // Record the completed session
-    await pool.execute(
-      `INSERT INTO sessions (user_id, focus_minutes, coins_awarded, xp_awarded, completed_at)
-       VALUES (?, ?, ?, ?, NOW())`,
-      [user_id, focus_minutes, coins, xp]
-    );
+    const user = await prisma.user.update({
+      where: { id: Number(id) },
+      data: { coins: { increment: amount } },
+    });
 
-    // Update user totals
-    await pool.execute(
-      `UPDATE users SET coins = coins + ?, xp = xp + ? WHERE id = ?`,
-      [coins, xp, user_id]
-    );
-
-    // Count sessions completed today (REQ-6)
-    const [rows] = await pool.execute(
-      `SELECT COUNT(*) AS sessions_today FROM sessions
-       WHERE user_id = ? AND DATE(completed_at) = CURDATE()`,
-      [user_id]
-    );
-
-    res.json({ coins, xp, sessions_today: rows[0].sessions_today });
+    res.json({ coins: user.coins });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: "Coin update error" });
   }
 });
 
-// Start backend server
 app.listen(process.env.PORT, () => {
   console.log(`Backend running on port ${process.env.PORT}`);
 });
