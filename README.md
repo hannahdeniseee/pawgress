@@ -14,7 +14,7 @@ cd pawgress
 npm install
 ```
 
-## Install Dependencies
+## Install Backend Dependencies
 ```
 cd backend
 npm install
