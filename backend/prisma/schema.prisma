@@ -12,7 +12,25 @@ model User {
   username  String @db.VarChar(50)
   avatarUrl String?
   coins     Int @default(100)
-
+  inventory UserAccessory[]
   createdAt DateTime @default(now())
 }
 
+model Accessory {
+  id        Int @id @default(autoincrement())
+  name      String @unique
+  slot      String
+  price     Int
+  users     UserAccessory[]
+}
+
+model UserAccessory {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  accessoryId Int
+  createdAt   DateTime  @default(now())
+  user        User       @relation(fields: [userId], references: [id])
+  accessory   Accessory  @relation(fields: [accessoryId], references: [id])
+
+  @@unique([userId, accessoryId])
+}

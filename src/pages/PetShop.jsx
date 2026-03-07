@@ -7,10 +7,10 @@ import glasses from "../assets/glasses.svg";
 import collar from "../assets/collar.svg";
 
 const SHOP_ITEMS = [
-  { id: "pinkBow", name: "Pink Bow", price: 60, image: pinkBow, slot: "head" },
-  { id: "necktie", name: "Necktie", price: 60, image: necktie, slot: "neck" },
-  { id: "glasses", name: "Glasses", price: 80, image: glasses, slot: "head" },
-  { id: "collar", name: "Collar", price: 50, image: collar, slot: "head" },
+  { id: 1, name: "Pink Bow", price: 60, image: pinkBow, slot: "head" },
+  { id: 2, name: "Necktie", price: 60, image: necktie, slot: "neck" },
+  { id: 3, name: "Glasses", price: 80, image: glasses, slot: "head" },
+  { id: 4, name: "Collar", price: 50, image: collar, slot: "head" },
 ];
 
 const INITIAL_STATE = {
@@ -31,13 +31,13 @@ export default function PetAccessoryShop({ userId }) {
     const data = await res.json();
 
     setCoins(data.coins);
-    setInventory(data.inventory || []);
+    setInventory(data.inventory.map(a => a.accessoryId) || []);
   }
     loadUser();
   }, [userId]);
   
   function getItem(id) {
-    return SHOP_ITEMS.find((i) => i.id === id);
+    return SHOP_ITEMS.find((i) => i.id === Number(id));
   }
 
   function owns(itemId) {
@@ -54,15 +54,25 @@ export default function PetAccessoryShop({ userId }) {
     if (coins < item.price) return showMessage("Not enough coins!");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${userId}/coins`, {
+      // Deduct coins
+      const coinRes = await fetch(`http://localhost:5000/api/users/${userId}/coins`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: -item.price }), 
       });
 
-      const data = await res.json();
-      setCoins(data.coins);
+      const coinData = await coinRes.json();
+      setCoins(coinData.coins);
+
+      // Add purchased item to inventory
+      await fetch(`http://localhost:5000/api/users/${userId}/inventory`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessoryId: item.id }),
+    });
+
       setInventory((inv) => [...inv, item.id]);
+
       showMessage(`Bought ${item.name}!`);
     } catch {
       showMessage("Network error, try again.");

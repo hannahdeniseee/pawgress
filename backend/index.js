@@ -41,13 +41,13 @@ app.post("/api/users/add", async (req, res) => {
 
 app.get("/api/users/:id", async (req, res) => {
   const user = await prisma.user.findUnique({
-    where: { id: Number(req.params.id) }
-  });
+    where: { id: Number(req.params.id) },
+    include: {
+      inventory: true, 
+    }
+    });
 
-  res.json({
-    ...user,
-    inventory: [], // placeholder until you add inventory to the schema
-  });
+  res.json(user);
 
 });
 
@@ -62,6 +62,25 @@ app.patch("/api/users/:id/coins", async (req, res) => {
     });
 
     res.json({ coins: user.coins });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Coin update error" });
+  }
+});
+
+app.post("/api/users/:id/inventory", async (req, res) => {
+  const { id } = req.params
+  const { accessoryId } = req.body
+
+  try {
+    const item = await prisma.userAccessory.create({
+      data: {
+        userId: Number(id),
+        accessoryId: Number(accessoryId),
+      }
+    });
+
+    res.json(item);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Coin update error" });
