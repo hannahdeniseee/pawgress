@@ -328,7 +328,7 @@ export default function PomodoroTimer({ user }) {
       {notification && (
         <div className="notif-overlay">
           <div className={`notif-window ${notification.type}`}>
-            <TitleBar title={notification.type === "focus" ? "GOATED" : "It's time to lock in!"} onSettings={() => setNotification(null)} />
+            <TitleBar title={notification.type === "focus" ? "Congrats!" : "It's time to lock in!"} onSettings={() => setNotification(null)} />
             <div className="notif-body">
               <div className="notif-emoji">
                 {notification.type === "focus" ? "🎉" : "🐾"}
@@ -340,7 +340,11 @@ export default function PomodoroTimer({ user }) {
                     <span className="n-pill coin">+{notification.coins} 🪙 coins</span>
                     <span className="n-pill xp">+{notification.xp} ✨ XP</span>
                   </div>
+<<<<<<< HEAD
                   <p className="notif-sub">Go take a break!</p>
+=======
+                  <p className="notif-sub">Time to take a break!</p>
+>>>>>>> 401a4bc809c7d1b9548403dd3c6b378d363ea3ab
                   <div className="notif-actions">
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("short"); }}>Short Break</button>
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("long"); }}>Long Break</button>

@@ -4,9 +4,10 @@ import Login from './pages/Login.jsx'
 import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
 import PetShop from './pages/PetShop.jsx'
+import Todo from "./pages/Todo.jsx";
 
 function AppContent() {
-  const { isLoading, isAuthenticated, user } = useAuth0();
+  const { isLoading, isAuthenticated, user, logout } = useAuth0();
   const [dbUser, setDbUser] = useState(null);
 
   useEffect(() => {
@@ -28,20 +29,37 @@ function AppContent() {
 
   if (isLoading) return <div style={{ color: '#f0ebe6', fontFamily: 'sans-serif', padding: '2rem' }}>Loading...</div>;
 
-  return isAuthenticated ? (
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  const currentUser = dbUser || user;
+
+  return (
     <>
-    <PomodoroTimer user={dbUser || user}></PomodoroTimer>
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <SelectPet />
-    </div>
-    {dbUser && <PetShop userId={dbUser.id} />}
-    <Login />
+      <img
+        src={currentUser.picture}
+        alt={currentUser.name}
+        style={{ width: 100, borderRadius: "50%" }}
+      />
+      <h2>{currentUser.nickname || currentUser.username}</h2>
+      <p>{currentUser.email}</p>
+
+      <button
+        onClick={() =>
+          logout({ logoutParams: { returnTo: window.location.origin } })
+        }
+      >
+        Logout
+      </button>
+
+      <PomodoroTimer user={currentUser} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <SelectPet />
+      </div>
+      {dbUser && <PetShop userId={dbUser.id} />}
+      <Todo />
     </>
-  ) : (
-    <div style={{ marginTop: '20px', textAlign: 'center' }}>
-      <p style={{ fontFamily: 'Arial', color: '#666' }}>Login to save your progress</p>
-      <Login />
-    </div>
   );
 }
 
