@@ -5,13 +5,29 @@ const DEFAULT_FOCUS = 25;
 const DEFAULT_SHORT_BREAK = 5;
 const DEFAULT_LONG_BREAK = 15;
 
-function calcRewards(focusMinutes) {
-  const coins = Math.floor(focusMinutes * 2);
-  const xp = Math.floor(focusMinutes * 3);
-  return { coins, xp };
+// Tiered multiplier: longer sessions earn disproportionately more,
+// creating clear milestones that align with Pomodoro best practices.
+//   < 15 min → 1.0×  (warm-up / quick session)
+//   15–24 min → 1.5×  (solid effort)
+//   25–44 min → 2.0×  (standard Pomodoro — the sweet spot)
+//   45+  min → 2.5×  (deep work)
+export function calcRewards(focusMinutes) {
+  const base_coins = focusMinutes * 2;
+  const base_xp    = focusMinutes * 3;
+
+  let multiplier;
+  if      (focusMinutes >= 45) multiplier = 2.5;
+  else if (focusMinutes >= 25) multiplier = 2.0;
+  else if (focusMinutes >= 15) multiplier = 1.5;
+  else                         multiplier = 1.0;
+
+  return {
+    coins: Math.floor(base_coins * multiplier),
+    xp:    Math.floor(base_xp    * multiplier),
+  };
 }
 
-function formatTime(seconds) {
+export function formatTime(seconds) {
   const m = String(Math.floor(seconds / 60)).padStart(2, "0");
   const s = String(seconds % 60).padStart(2, "0");
   return `${m}:${s}`;
@@ -170,6 +186,15 @@ export default function PomodoroTimer({ user }) {
       const { coins, xp } = calcRewards(focusMins);
       setNotification({ type: "focus", coins, xp });
       setSessionsToday((s) => s + 1);
+
+      // Award coins to the backend when a focus session is completed
+      if (user?.id) {
+        fetch(`http://localhost:5000/api/users/${user.id}/coins`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: coins }),
+        }).catch((err) => console.error("Failed to award coins:", err));
+      }
     } else {
       setNotification({ type: "break" });
     }
@@ -210,7 +235,7 @@ export default function PomodoroTimer({ user }) {
   };
   const col = modeColors[mode];
 
-  const modeLabel = mode === "focus" ? "time to LOCK IN" : mode === "short" ? "sure go ADHD bud" : "lazy ass mofo";
+  const modeLabel = mode === "focus" ? "Focus Session" : mode === "short" ? "Take a breather!" : "Some you time.";
 
   return (
     <div className="pomo-root" style={{ "--accent": col.accent, "--bg-tint": col.bg, "--tab-active": col.tab }}>
@@ -282,10 +307,10 @@ export default function PomodoroTimer({ user }) {
             {/* Controls */}
             <div className="controls">
               <button className="os-btn primary" onClick={handleStartPause}>
-                {running ? "⏸ Pause" : secondsLeft < total ? "▶ I'M READY" : "▶ I'M READY"}
+                {running ? "⏸ Pause" : secondsLeft < total ? "▶ Resume Timer" : "▶ Start Timer"}
               </button>
               <button className="os-btn ghost" onClick={handleCancel}>
-                ✕ Nah nvm
+                ✕ Cancel
               </button>
             </div>
 
