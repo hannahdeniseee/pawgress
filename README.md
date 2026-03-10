@@ -42,3 +42,14 @@ npx prisma migrate dev
 node index.js
 npm run dev
 ```
+
+## Install Dependencies for Testing
+```
+npm install -D vitest
+npm install -D supertest
+```
+
+## Run Tests
+```
+npm test
+```
