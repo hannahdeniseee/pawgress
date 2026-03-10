@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
     "mysql2": "^3.17.4"
   },
   "devDependencies": {
-    "prisma": "^7.4.2"
+    "prisma": "^7.4.2",
+    "vitest": "^4.0.18"
   }
 }
