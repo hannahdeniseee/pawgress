@@ -14,5 +14,19 @@ model User {
   coins     Int @default(100)
 
   createdAt DateTime @default(now())
+
+  sentRequests     Friendship[] @relation("FriendshipRequester")
+  receivedRequests Friendship[] @relation("FriendshipReceiver")
+}
+
+model Friendship {
+  id          Int      @id @default(autoincrement())
+  requesterId Int
+  receiverId  Int
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id])
+  receiver  User @relation("FriendshipReceiver", fields: [receiverId], references: [id])
 }
 

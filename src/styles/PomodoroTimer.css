@@ -36,10 +36,7 @@
 .os-window {
   position: relative;
   z-index: 10;
-<<<<<<< HEAD:src/styles/PomodoroTimer.css
-=======
   width: 100%;
->>>>>>> 401a4bc809c7d1b9548403dd3c6b378d363ea3ab:src/pages/PomodoroTimer.css
   background: var(--window-bg);
   border: 2.5px solid var(--border);
   border-radius: 16px;

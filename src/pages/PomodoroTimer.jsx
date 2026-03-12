@@ -340,11 +340,7 @@ export default function PomodoroTimer({ user }) {
                     <span className="n-pill coin">+{notification.coins} 🪙 coins</span>
                     <span className="n-pill xp">+{notification.xp} ✨ XP</span>
                   </div>
-<<<<<<< HEAD
-                  <p className="notif-sub">Go take a break!</p>
-=======
                   <p className="notif-sub">Time to take a break!</p>
->>>>>>> 401a4bc809c7d1b9548403dd3c6b378d363ea3ab
                   <div className="notif-actions">
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("short"); }}>Short Break</button>
                     <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("long"); }}>Long Break</button>

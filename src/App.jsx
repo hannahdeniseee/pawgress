@@ -5,6 +5,7 @@ import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
 import PetShop from './pages/PetShop.jsx'
 import Todo from "./pages/Todo.jsx";
+import Friends from "./pages/Friends.jsx";
 
 function AppContent() {
   const { isLoading, isAuthenticated, user, logout } = useAuth0();
@@ -59,6 +60,7 @@ function AppContent() {
       </div>
       {dbUser && <PetShop userId={dbUser.id} />}
       <Todo />
+      {dbUser && <Friends currentUser={dbUser} />}
     </>
   );
 }
