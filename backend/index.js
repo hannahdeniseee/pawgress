@@ -51,6 +51,9 @@ app.post('/api/pets/add', async (req, res) => {
     res.status(201).json(newPet);
   } catch (error) {
     console.error(error);
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'You can only have one pet at a time' });
+    }
     res.status(500).json({ error: 'Failed to adopt pet' });
   }
 });
