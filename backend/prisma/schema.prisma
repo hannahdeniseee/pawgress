@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id         Int @id @default(autoincrement())
+  auth0Id    String @unique
+  username   String @db.VarChar(50) 
+  avatarUrl  String?
+  createdAt  DateTime @default(now())
+  pet        Pet?   
+}
+
+model Pet {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  type      String
+  breed     String
+  image     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
