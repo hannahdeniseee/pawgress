@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// Helper to get all days of a month
+// Gets all days of the month
 const getDaysInMonth = (year, month) => {
   const date = new Date(year, month, 1);
   const days = [];
@@ -28,6 +28,7 @@ export default function TodoCalendarWithEvents() {
   // Add task
   const addTask = () => {
     if (!newTask.trim()) return;
+
     setTasks([...tasks, { id: Date.now(), name: newTask, status: "uncompleted", deadline: taskDeadline }]);
     setNewTask("");
   };
@@ -84,7 +85,7 @@ export default function TodoCalendarWithEvents() {
   const days = getDaysInMonth(today.getFullYear(), today.getMonth());
   const firstDayWeekday = days[0].getDay(); // 0 = Sunday
 
-  // Helper for status color
+  // Status Color
   const getStatusColor = (status) => {
     switch (status) {
       case "completed": return "#4CAF50";
@@ -159,6 +160,7 @@ export default function TodoCalendarWithEvents() {
       {/* Today's Tasks + Events */}
       <div style={{ marginBottom: "20px" }}>
         <h3>Today's Tasks & Events ({todayStr})</h3>
+         <p>So sorry I am sick (w/ flu-like symptoms) will update this later on - Hannah :(</p>
 
         {/* Tasks */}
         {tasksByDate[todayStr]?.length ? (
