@@ -41,8 +41,8 @@ export const app = express();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-app.post("/api/users/add", async (req, res) => {
-  const { auth0Id, username, avatarUrl } = req.body;
+app.post('/api/users/add', async (req, res) => {
+  const { id, username, avatarUrl } = req.body;
 
   if (!auth0Id) {
     return res.status(400).json({ error: "auth0Id is required" });
@@ -343,3 +343,26 @@ app.delete("/api/events/:id", async (req, res) => {
 app.listen(process.env.PORT, () => {
   console.log(`Backend running on port ${process.env.PORT}`);
 });
+app.get('/api/profile/:auth0Id', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { auth0Id: req.params.auth0Id },
+      include: { pet: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// app.listen(process.env.PORT, () => {
+//   console.log(`Backend running on port ${process.env.PORT}`);
+// });
+
+export default app;
