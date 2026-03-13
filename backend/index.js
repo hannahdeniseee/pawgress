@@ -13,31 +13,49 @@ const adapter = new PrismaMariaDb({
   database: "pawgress",
 });
 
-export const prisma = new PrismaClient({ adapter });
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: process.env.DB_PASSWORD || "",
+  database: "pawgress",
+});
+
+export let prisma;
+
+if (process.env.NODE_ENV !== 'test') {
+  prisma = new PrismaClient({ adapter });
+}
+
+if (process.env.NODE_ENV === 'test') {
+  prisma = {
+    user: {
+      findUnique: async () => {},
+    },
+    pet: {
+      create: async () => {},
+    },
+  };
+}
 
 export const app = express();
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
 app.post('/api/users/add', async (req, res) => {
-  const { auth0Id, username, avatarUrl } = req.body;
+  const { id, username, avatarUrl } = req.body;
 
   try {
-    const user = await prisma.user.upsert({
-      where: { auth0Id: auth0Id },
-      update: {
-        username: username,
-        avatarUrl: avatarUrl,
-      },
-      create: {
-        auth0Id: auth0Id,
-        username: username,
-        avatarUrl: avatarUrl,
-      },
-      include: { pet: true } 
-    });
-    res.json(user);
+    await pool.execute(
+      `INSERT IGNORE INTO users (id, username, avatarUrl) VALUES (?, ?, ?)`,
+      [id, username, avatarUrl]
+    );
 
+    const [rows] = await pool.execute(
+      `SELECT id, username, avatarUrl FROM users WHERE id = ?`,
+      [id]
+    );
+
+    res.json(rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Database error' });
@@ -65,62 +83,26 @@ app.post('/api/pets/add', async (req, res) => {
   }
 });
 
-// Fetches the user and their associated pet
 app.get('/api/profile/:auth0Id', async (req, res) => {
-  const { auth0Id } = req.params;
-  const user = await prisma.user.findUnique({
-    where: { auth0Id },
-    include: { pet: true }
-  });
-  if (!user) return res.status(404).json({ error: "Not found" });
-  res.json(user);
-});
-
-// Calculates derived metrics for the user dashboard
-app.get('/api/profile/:auth0Id/stats', async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { auth0Id: req.params.auth0Id },
-      include: { pet: true }
+      include: { pet: true },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const now = new Date();
-    const accountAgeDays = Math.max(0, Math.floor((now - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)));
-    
-    const stats = {
-      accountAgeDays,
-      hasPet: !!user.pet,
-      petType: user.pet ? user.pet.type : null,
-      petOwnershipDays: user.pet 
-        ? Math.max(0, Math.floor((now - new Date(user.pet.createdAt))/(1000 * 60 * 60 * 24))): 0
-    };
-
-    res.status(200).json(stats);
+    res.json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to calculate statistics' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.post('/api/sessions/log', async (req, res) => {
-  const { userId, type, duration } = req.body;
-  try {
-    const session = await prisma.session.create({
-      data: { userId, type, duration }
-    });
-    res.status(201).json(session);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to log session' });
-  }
-});
+// app.listen(process.env.PORT, () => {
+//   console.log(`Backend running on port ${process.env.PORT}`);
+// });
 
-app.listen(process.env.PORT, () => {
-  console.log(`Backend running on port ${process.env.PORT}`);
-});
-
-// export default app;
+export default app;
