@@ -1,5 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import cors from "cors";
+<<<<<<< HEAD
 import dotenv from "dotenv";
 import mysql from "mysql2/promise";
 import pkg from "@prisma/client";
@@ -20,6 +23,11 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || "",
   database: "pawgress",
 });
+=======
+import { PrismaClient } from "@prisma/client";
+
+export const prisma = new PrismaClient();
+>>>>>>> feature-todo
 
 let prisma;
 
@@ -138,6 +146,7 @@ app.post("/api/users/:id/inventory", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 // Send friend request
 app.post("/api/friends/request", async (req, res) => {
   const { requesterId, receiverId } = req.body;
@@ -234,6 +243,10 @@ app.patch("/api/friends/:id/respond", async (req, res) => {
     res.status(500).json({ error: "Respond error" });
   }
 });
+=======
+// --- CALENDAR BACKEND ---
+
+>>>>>>> feature-todo
 
 // Create a new task
 app.post("/api/users/:id/tasks", async (req, res) => {
@@ -340,6 +353,7 @@ app.delete("/api/events/:id", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 app.listen(process.env.PORT, () => {
   console.log(`Backend running on port ${process.env.PORT}`);
 });
@@ -366,3 +380,7 @@ app.get('/api/profile/:auth0Id', async (req, res) => {
 // });
 
 export default app;
+=======
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+>>>>>>> feature-todo

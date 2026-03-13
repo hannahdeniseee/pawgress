@@ -7,13 +7,22 @@ datasource db {
 }
 
 model User {
-  id        Int    @id @default(autoincrement())
-  auth0Id   String @unique
-  username  String @db.VarChar(50)
-  avatarUrl String?
-  coins     Int @default(100)
-  inventory UserAccessory[]
+  id       Int     @id @default(autoincrement())
+  auth0Id  String  @unique
+  username String?
+  coins    Int     @default(100)
+  events   Event[]
+  tasks    Task[]
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  status    String   @default("uncompleted")
+  deadline  DateTime
   createdAt DateTime @default(now())
+<<<<<<< HEAD
 
   sentRequests     Friendship[] @relation("FriendshipRequester")
   receivedRequests Friendship[] @relation("FriendshipReceiver")
@@ -31,15 +40,26 @@ model Friendship {
 
   requester User @relation("FriendshipRequester", fields: [requesterId], references: [id])
   receiver  User @relation("FriendshipReceiver", fields: [receiverId], references: [id])
+=======
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Task_userId_fkey")
+>>>>>>> feature-todo
 }
 
-model Accessory {
-  id        Int @id @default(autoincrement())
-  name      String @unique
-  slot      String
-  price     Int
-  users     UserAccessory[]
+model Event {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  date      DateTime
+  time      String?
+  venue     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Event_userId_fkey")
 }
+<<<<<<< HEAD
 
 model UserAccessory {
   id          Int      @id @default(autoincrement())
@@ -76,3 +96,5 @@ model Event {
 
   @@index([userId], map: "Event_userId_fkey")
 }
+=======
+>>>>>>> feature-todo

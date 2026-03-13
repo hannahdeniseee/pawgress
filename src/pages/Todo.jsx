@@ -118,22 +118,33 @@ export default function TodoCalendarWithEvents() {
 
   // --- GROUP TASKS & EVENTS BY DATE ---
   const tasksByDate = useMemo(() => {
-    return tasks.reduce((acc, task) => {
-      const dateStr = new Date(task.deadline).toISOString().split("T")[0];
-      if (!acc[dateStr]) acc[dateStr] = [];
-      acc[dateStr].push(task);
-      return acc;
-    }, {});
-  }, [tasks]);
+  if (!Array.isArray(tasks)) return {};
 
-  const eventsByDate = useMemo(() => {
-    return events.reduce((acc, event) => {
-      const dateStr = new Date(event.date).toISOString().split("T")[0];
-      if (!acc[dateStr]) acc[dateStr] = [];
-      acc[dateStr].push(event);
-      return acc;
-    }, {});
-  }, [events]);
+  return tasks.reduce((acc, task) => {
+    // Only use valid dates
+    const taskDate = new Date(task.deadline);
+    if (isNaN(taskDate)) return acc; // skip invalid dates
+
+    const dateStr = taskDate.toISOString().split("T")[0];
+    if (!acc[dateStr]) acc[dateStr] = [];
+    acc[dateStr].push(task);
+    return acc;
+  }, {});
+}, [tasks]);
+
+const eventsByDate = useMemo(() => {
+  if (!Array.isArray(events)) return {};
+
+  return events.reduce((acc, event) => {
+    const eventDateObj = new Date(event.date);
+    if (isNaN(eventDateObj)) return acc; // skip invalid dates
+
+    const dateStr = eventDateObj.toISOString().split("T")[0];
+    if (!acc[dateStr]) acc[dateStr] = [];
+    acc[dateStr].push(event);
+    return acc;
+  }, {});
+}, [events]);
 
   const days = getDaysInMonth(today.getFullYear(), today.getMonth());
   const firstDayWeekday = days[0].getDay();
@@ -153,22 +164,22 @@ export default function TodoCalendarWithEvents() {
       {/* TODAY'S TASKS & EVENTS */}
       <div style={{ marginBottom: 20 }}>
         <h3>Today's Tasks & Events ({todayStr})</h3>
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {(tasksByDate[todayStr] || []).map(task => (
-            <li key={task.id}>
-              <span onClick={() => toggleStatus(task)} style={{ textDecoration: task.status === "completed" ? "line-through" : "none", cursor: "pointer" }}>
-                {task.name} ({task.status})
-              </span>
-              <button onClick={() => deleteTask(task.id)} style={{ marginLeft: 5 }}>x</button>
-            </li>
-          ))}
-          {(eventsByDate[todayStr] || []).map(event => (
-            <li key={event.id}>
-              {event.title} {event.time && `@${event.time}`} {event.venue && `(${event.venue})`}
-              <button onClick={() => deleteEvent(event.id)} style={{ marginLeft: 5 }}>x</button>
-            </li>
-          ))}
-          {!(tasksByDate[todayStr]?.length || eventsByDate[todayStr]?.length) && <li>No tasks or events today!</li>}
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {(tasksByDate[todayStr] || []).map(task => (
+              <li key={task.id} data-testid={`task-${task.id}`}>
+                <span onClick={() => toggleStatus(task)}>
+                  {task.name} ({task.status})
+                </span>
+                <button onClick={() => deleteTask(task.id)}>x</button>
+              </li>
+            ))}
+            {(eventsByDate[todayStr] || []).map(event => (
+              <li key={event.id} data-testid={`event-${event.id}`}>
+                {event.title} {event.time && `@${event.time}`} {event.venue && `(${event.venue})`}
+                <button onClick={() => deleteEvent(event.id)}>x</button>
+              </li>
+            ))}
+            {!(tasksByDate[todayStr]?.length || eventsByDate[todayStr]?.length) && <li>No tasks or events today!</li>}
         </ul>
       </div>
 
@@ -218,4 +229,5 @@ export default function TodoCalendarWithEvents() {
       </div>
     </div>
   )
+  
 }
