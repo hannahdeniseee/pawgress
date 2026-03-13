@@ -17,6 +17,9 @@ model User {
 
   sentRequests     Friendship[] @relation("FriendshipRequester")
   receivedRequests Friendship[] @relation("FriendshipReceiver")
+
+  tasks  Task[]
+  events Event[]
 }
 
 model Friendship {
@@ -47,4 +50,29 @@ model UserAccessory {
   accessory   Accessory  @relation(fields: [accessoryId], references: [id])
 
   @@unique([userId, accessoryId])
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  status    String   @default("uncompleted")
+  deadline  DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Task_userId_fkey")
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  date      DateTime
+  time      String?
+  venue     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Event_userId_fkey")
 }
