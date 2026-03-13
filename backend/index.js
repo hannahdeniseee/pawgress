@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import mysql from "mysql2/promise";
 import pkg from "@prisma/client";
 const { PrismaClient } = pkg;
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
@@ -13,9 +14,30 @@ const adapter = new PrismaMariaDb({
   database: "pawgress",
 });
 
-export const prisma = new PrismaClient({ adapter });
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: process.env.DB_PASSWORD || "",
+  database: "pawgress",
+});
 
-const app = express();
+let prisma;
+
+if (process.env.NODE_ENV !== 'test') {
+  prisma = new PrismaClient({ adapter });
+};
+
+if (!prisma) {
+  prisma = {
+    pet: {
+      create: async () => {},
+    },
+  };
+};
+
+export { prisma };
+
+export const app = express();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
@@ -46,6 +68,15 @@ app.get("/api/users/search", async (req, res) => {
   if (!username) return res.status(400).json({ error: "username required" });
 
   try {
+    await pool.execute(
+      `INSERT IGNORE INTO users (id, username, avatarUrl) VALUES (?, ?, ?)`,
+      [id, username, avatarUrl]
+    );
+
+    const [rows] = await pool.execute(
+      `SELECT id, username, avatarUrl FROM users WHERE id = ?`,
+      [id]
+    );
     const user = await prisma.user.findFirst({
       where: { username },
       select: { id: true, username: true, avatarUrl: true },
