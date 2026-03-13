@@ -1,9 +1,11 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/client"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -16,7 +18,7 @@ model User {
 }
 
 model Pet {
-  id        Int      @id @default(autoincrement())
+  id        Int      @id @default(autoincrement()) @unique
   userId    Int      @unique
   type      String
   breed     String

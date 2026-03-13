@@ -15,7 +15,7 @@ const adapter = new PrismaMariaDb({
 
 export const prisma = new PrismaClient({ adapter });
 
-const app = express();
+export const app = express();
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
@@ -42,18 +42,21 @@ app.post('/api/users/add', async (req, res) => {
 
 app.post('/api/pets/add', async (req, res) => {
   try {
-    const { userId, type, breed, image } = req.body;
-    
     const newPet = await prisma.pet.create({
-      data: { userId, type, breed, image }
+      data: {
+        userId: req.body.userId,
+        type: req.body.type,
+        breed: req.body.breed,
+        image: req.body.image,
+      },
     });
     
     res.status(201).json(newPet);
   } catch (error) {
-    console.error(error);
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'You can only have one pet at a time' });
     }
+    console.error(error);
     res.status(500).json({ error: 'Failed to adopt pet' });
   }
 });
@@ -62,4 +65,4 @@ app.post('/api/pets/add', async (req, res) => {
 //   console.log(`Backend running on port ${process.env.PORT}`);
 // });
 
-export default app;
+// export default app;

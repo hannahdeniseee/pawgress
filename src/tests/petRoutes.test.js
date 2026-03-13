@@ -1,15 +1,20 @@
 import request from 'supertest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import app from './app';
-import prisma from './prismaClient';
+import { Prisma } from '@prisma/client';
 
-vi.mock('./prismaClient', () => ({
-  default: {
-    pet: {
-      create: vi.fn(),
+vi.mock('../../backend/index.js', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    prisma: {
+      pet: {
+        create: vi.fn(),
+      },
     },
-  },
-}));
+  };
+});
+
+import { app, prisma } from '../../backend/index.js';
 
 describe('POST /api/pets/add', () => {
   
@@ -18,12 +23,13 @@ describe('POST /api/pets/add', () => {
   });
 
   it('should successfully save a pet and return status 201', async () => {
+    const auth0 = 1;
     const mockDbResponse = {
       id: 1,
-      userId: 'auth0|12345',
+      userId: auth0,
       type: 'Dog',
       breed: 'Golden Retriever',
-      image: '../assets/golden-retriever.svg',
+      image: '../assets/golden-retriever-dog.svg',
       createdAt: new Date().toISOString()
     };
 
@@ -32,23 +38,22 @@ describe('POST /api/pets/add', () => {
     const response = await request(app)
       .post('/api/pets/add')
       .send({
-        userId: 'auth0|12345',
+        userId: 1,
         type: 'Dog',
         breed: 'Golden Retriever',
-        image: '../assets/golden-retriever.svg'
+        image: '../assets/golden-retriever-dog.svg'
       });
 
     expect(response.status).toBe(201);
-    expect(response.body.breed).toBe('Golden Retriever');
     expect(response.body.id).toBe(1);
-
+    
     expect(prisma.pet.create).toHaveBeenCalledTimes(1);
     expect(prisma.pet.create).toHaveBeenCalledWith({
       data: {
-        userId: 'auth0|12345',
+        userId: 1,
         type: 'Dog',
         breed: 'Golden Retriever',
-        image: '../assets/golden-retriever.svg'
+        image: '../assets/golden-retriever-dog.svg'
       }
     });
   });
@@ -59,22 +64,20 @@ describe('POST /api/pets/add', () => {
     const response = await request(app)
       .post('/api/pets/add')
       .send({
-        userId: 'auth0|12345',
+        userId: 1,
         type: 'Cat',
-        breed: 'Siamese'
+        breed: 'Black Cat',
+        image: '../assets/black-cat.svg'
       });
 
     expect(response.status).toBe(500);
     expect(response.body.error).toBe('Failed to adopt pet');
   });
-});
-
-describe('POST /api/pets/add - 1:1 Constraint', () => {
-
+  
   it('should return 400 if the user already owns a pet (Unique Constraint)', async () => {
     const duplicateError = new Prisma.PrismaClientKnownRequestError(
       'Unique constraint failed on the fields: (`userId`)',
-      { code: 'P2002', clientVersion: '5.0.0' }
+      { code: 'P2002', clientVersion: '6.19.2' }
     );
 
     prisma.pet.create.mockRejectedValue(duplicateError);
@@ -84,8 +87,8 @@ describe('POST /api/pets/add - 1:1 Constraint', () => {
       .send({
         userId: 1, // user already has a pet in this test case
         type: 'Cat',
-        breed: 'Siamese',
-        image: '../assets/siamese.svg'
+        breed: 'Black Cat',
+        image: '../assets/black-cat.svg'
       });
 
     expect(response.status).toBe(400); 

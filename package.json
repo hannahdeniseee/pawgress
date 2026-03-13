@@ -14,7 +14,11 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.15.0",
+    "@prisma/adapter-mariadb": "^7.5.0",
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "mysql2": "^3.17.4",
+    "pg": "^8.20.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -30,6 +34,8 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "jsdom": "^28.1.0",
+    "prisma": "^6.19.2",
+    "supertest": "^7.2.2",
     "vite": "^7.3.1",
     "vitest": "^4.1.0"
   }
