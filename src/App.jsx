@@ -3,6 +3,7 @@ import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import Login from './pages/Login.jsx'
 import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
+import Profile from './pages/Profile.jsx'
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -14,9 +15,9 @@ function AppContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          auth0_id: user.sub,
+          auth0Id: user.sub,
           username: user.nickname || user.name || user.email,
-          avatar_url: user.picture || null,
+          avatarUrl: user.picture || null,
         }),
       })
         .then((res) => res.json())
@@ -28,7 +29,10 @@ function AppContent() {
   if (isLoading) return <div style={{ color: '#f0ebe6', fontFamily: 'sans-serif', padding: '2rem' }}>Loading...</div>;
 
   return isAuthenticated ? (
-    <PomodoroTimer user={dbUser || user} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <Profile dbUser={dbUser} />
+      <PomodoroTimer user={dbUser || user} />
+    </div>
   ) : (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <SelectPet />

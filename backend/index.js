@@ -63,21 +63,13 @@ app.post('/api/pets/add', async (req, res) => {
 
 // Fetches the user and their associated pet
 app.get('/api/profile/:auth0Id', async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { auth0Id: req.params.auth0Id },
-      include: { pet: true } // Joins the Pet table automatically
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch profile' });
-  }
+  const { auth0Id } = req.params;
+  const user = await prisma.user.findUnique({
+    where: { auth0Id },
+    include: { pet: true }
+  });
+  if (!user) return res.status(404).json({ error: "Not found" });
+  res.json(user);
 });
 
 // Calculates derived metrics for the user dashboard
