@@ -18,7 +18,9 @@ function AppContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           auth0Id: user.sub,
+          auth0Id: user.sub,
           username: user.nickname || user.name || user.email,
+          avatarUrl: user.picture || null,
           avatarUrl: user.picture || null,
         }),
       })
