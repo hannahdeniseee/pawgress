@@ -61,6 +61,55 @@ app.post('/api/pets/add', async (req, res) => {
   }
 });
 
+// Fetches the user and their associated pet
+app.get('/api/profile/:auth0Id', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { auth0Id: req.params.auth0Id },
+      include: { pet: true } // Joins the Pet table automatically
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Calculates derived metrics for the user dashboard
+app.get('/api/profile/:auth0Id/stats', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { auth0Id: req.params.auth0Id },
+      include: { pet: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const now = new Date();
+    const accountAgeDays = Math.max(0, Math.floor((now - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)));
+    
+    const stats = {
+      accountAgeDays,
+      hasPet: !!user.pet,
+      petType: user.pet ? user.pet.type : null,
+      petOwnershipDays: user.pet 
+        ? Math.max(0, Math.floor((now - new Date(user.pet.createdAt))/(1000 * 60 * 60 * 24))): 0
+    };
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to calculate statistics' });
+  }
+});
+
 // app.listen(process.env.PORT, () => {
 //   console.log(`Backend running on port ${process.env.PORT}`);
 // });
