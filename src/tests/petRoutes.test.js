@@ -17,7 +17,6 @@ vi.mock('../../backend/index.js', async (importOriginal) => {
 import { app, prisma } from '../../backend/index.js';
 
 describe('POST /api/pets/add', () => {
-  
   beforeEach(() => {
     vi.clearAllMocks();
   });
