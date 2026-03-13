@@ -10,6 +10,9 @@ vi.mock('../../backend/index.js', async (importOriginal) => {
       pet: {
         create: vi.fn(),
       },
+      user: {
+        findUnique: vi.fn(),
+      }
     },
   };
 });
@@ -87,7 +90,6 @@ describe('POST /api/pets/add', () => {
     const response = await request(app)
       .post('/api/pets/add')
       .send({
-        id: 1,
         userId: 1, // user already has a pet in this test case
         type: 'Cat',
         breed: 'Black Cat',

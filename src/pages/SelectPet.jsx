@@ -35,12 +35,23 @@ export default function SelectPet() {
   const [selectedType, setSelectedType] = useState(null);
   const [selectedBreed, setSelectedBreed] = useState("");
 
+  // Helper to check if the user already has a pet
+  const hasPet = pets.length > 0;
+
   const handleTypeSelect = (typeKey) => {
+    // Prevent interaction if they already have a pet
+    if (hasPet) return; 
     setSelectedType(typeKey);
     setSelectedBreed("");
   };
 
   const selectPet = () => {
+    // Check if they already have a pet before adding
+    if (hasPet) {
+      alert("You can only have one pet at a time!");
+      return;
+    }
+
     if (selectedType && selectedBreed) {
       const breedInfo = petData[selectedType].breeds.find(b => b.name === selectedBreed);
       const newPet = {
@@ -50,7 +61,7 @@ export default function SelectPet() {
         id: Date.now(),
       };
 
-      setPets([...pets, newPet]);
+      setPets([newPet]); // Replace or set to a single array item
       setSelectedType(null);
       setSelectedBreed("");
     }
@@ -64,38 +75,43 @@ export default function SelectPet() {
 
   return (
     <div style={{ fontFamily: "Arial, sans-serif", padding: "40px"}}>
-      <h2 style={{ marginBottom: "20px", color: "#fff" }}>Pet Selection</h2>
+      <h2 style={{ marginBottom: "20px", color: "#fff" }}>
+        {hasPet ? "Your Companion" : "Pet Selection"}
+      </h2>
 
-      <div style={{ marginBottom: "20px" }}>
-        <h3 style={{ fontSize: "16px", color: "#fff", marginBottom: "10px" }}>1. Select Pet Type</h3>
-        <div style={{ display: "flex", gap: "10px" }}>
-          {Object.entries(petData).map(([key, data]) => (
-            <button
-              key={key}
-              onClick={() => handleTypeSelect(key)}
-              style={{
-                flex: 1,
-                padding: "15px",
-                border: selectedType === key ? "2px solid #4CAF50" : "1px solid #ccc",
-                borderRadius: "12px",
-                cursor: "pointer",
-                backgroundColor: selectedType === key ? "#f0f9f0" : "#fff",
-                transition: "all 0.2s",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "10px"
-              }}
-            >
-              {/* <img src={data.image} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} /> */}
-              <img src={new URL(data.image, import.meta.url).href} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} />
-              <span style={{ fontWeight: "bold", color: "#222" }}>{data.name}</span>
-            </button>
-          ))}
+      {/* 1. Select Pet Type */}
+      {!hasPet && (
+        <div style={{ marginBottom: "20px" }}>
+          <h3 style={{ fontSize: "16px", color: "#fff", marginBottom: "10px" }}>1. Select Pet Type</h3>
+          <div style={{ display: "flex", gap: "10px" }}>
+            {Object.entries(petData).map(([key, data]) => (
+              <button
+                key={key}
+                onClick={() => handleTypeSelect(key)}
+                style={{
+                  flex: 1,
+                  padding: "15px",
+                  border: selectedType === key ? "2px solid #4CAF50" : "1px solid #ccc",
+                  borderRadius: "12px",
+                  cursor: "pointer",
+                  backgroundColor: selectedType === key ? "#f0f9f0" : "#fff",
+                  transition: "all 0.2s",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "10px"
+                }}
+              >
+                <img src={new URL(data.image, import.meta.url).href} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} />
+                <span style={{ fontWeight: "bold", color: "#222" }}>{data.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {selectedType && (
+      {/* 2. Select Breed */}
+      {selectedType && !hasPet && (
         <div style={{ marginBottom: "20px" }}>
           <h3 style={{ fontSize: "16px", color: "#fff", marginBottom: "10px" }}>2. Select Breed</h3>
           <div style={{ display: "grid", flexDirection: "column", gap: "10px", alignItems: "center" }}>
@@ -131,29 +147,31 @@ export default function SelectPet() {
         </div>
       )}
 
-      <button
-        onClick={selectPet}
-        disabled={!selectedType || !selectedBreed}
-        onMouseOver={e => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = "#45a049")}
-        onMouseOut={e => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = "#4CAF50")}
-        style={{
-          width: "100%",
-          padding: "15px",
-          fontSize: "16px",
-          border: "none",
-          borderRadius: "12px",
-          backgroundColor: (!selectedType || !selectedBreed) ? "#ccc" : "#4CAF50",
-          color: "#fff",
-          fontWeight: "bold",
-          cursor: (!selectedType || !selectedBreed) ? "not-allowed" : "pointer",
-          height: "50px",
-          marginBottom: "30px",
-          transition: "background 0.2s"
-        }}
-      >
-        Add Pet
-      </button>
+      {/* Add Pet Button */}
+      {!hasPet && (
+        <button
+          onClick={selectPet}
+          disabled={!selectedType || !selectedBreed || hasPet}
+          style={{
+            width: "100%",
+            padding: "15px",
+            fontSize: "16px",
+            border: "none",
+            borderRadius: "12px",
+            backgroundColor: (!selectedType || !selectedBreed || hasPet) ? "#ccc" : "#4CAF50",
+            color: "#fff",
+            fontWeight: "bold",
+            cursor: (!selectedType || !selectedBreed || hasPet) ? "not-allowed" : "pointer",
+            height: "50px",
+            marginBottom: "30px",
+            transition: "background 0.2s"
+          }}
+        >
+          {hasPet ? "Limit Reached" : "Add Pet"}
+        </button>
+      )}
 
+      {/* Pet List */}
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {pets.map((pet) => (
           <li key={pet.id} style={{
@@ -177,8 +195,6 @@ export default function SelectPet() {
             </div>
             <button
               onClick={() => removePet(pet.id)}
-              onMouseOver={e => e.currentTarget.style.backgroundColor = "#d32f2f"}
-              onMouseOut={e => e.currentTarget.style.backgroundColor = "#f44336"}
               style={{
                 backgroundColor: "#f44336",
                 color: "#fff",
