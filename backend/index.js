@@ -23,17 +23,21 @@ app.post('/api/users/add', async (req, res) => {
   const { auth0Id, username, avatarUrl } = req.body;
 
   try {
-    await pool.execute(
-      `INSERT IGNORE INTO users (auth0Id, username, avatarUrl) VALUES (?, ?, ?)`,
-      [auth0Id, username, avatarUrl]
-    );
+    const user = await prisma.user.upsert({
+      where: { auth0Id: auth0Id },
+      update: {
+        username: username,
+        avatarUrl: avatarUrl,
+      },
+      create: {
+        auth0Id: auth0Id,
+        username: username,
+        avatarUrl: avatarUrl,
+      },
+      include: { pet: true } 
+    });
+    res.json(user);
 
-    const [rows] = await pool.execute(
-      `SELECT id, username, avatarUrl FROM users WHERE auth0Id = ?`,
-      [auth0Id]
-    );
-
-    res.json(rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Database error' });
@@ -102,8 +106,21 @@ app.get('/api/profile/:auth0Id/stats', async (req, res) => {
   }
 });
 
-// app.listen(process.env.PORT, () => {
-//   console.log(`Backend running on port ${process.env.PORT}`);
-// });
+app.post('/api/sessions/log', async (req, res) => {
+  const { userId, type, duration } = req.body;
+  try {
+    const session = await prisma.session.create({
+      data: { userId, type, duration }
+    });
+    res.status(201).json(session);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to log session' });
+  }
+});
+
+app.listen(process.env.PORT, () => {
+  console.log(`Backend running on port ${process.env.PORT}`);
+});
 
 // export default app;
