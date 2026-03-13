@@ -20,17 +20,17 @@ app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
 app.post('/api/users/add', async (req, res) => {
-  const { auth0Id, username, avatarUrl } = req.body;
+  const { id, username, avatarUrl } = req.body;
 
   try {
     await pool.execute(
-      `INSERT IGNORE INTO users (auth0Id, username, avatarUrl) VALUES (?, ?, ?)`,
-      [auth0Id, username, avatarUrl]
+      `INSERT IGNORE INTO users (id, username, avatarUrl) VALUES (?, ?, ?)`,
+      [id, username, avatarUrl]
     );
 
     const [rows] = await pool.execute(
-      `SELECT id, username, avatarUrl FROM users WHERE auth0Id = ?`,
-      [auth0Id]
+      `SELECT id, username, avatarUrl FROM users WHERE id = ?`,
+      [id]
     );
 
     res.json(rows[0]);

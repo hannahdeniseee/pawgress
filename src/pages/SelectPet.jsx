@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const petData = {
   dog: {
     name: "Dog",
-    image: "../assets/golden-retriever-dog.png",
+    image: "../assets/golden-retriever-dog.svg",
     breeds: [
       { name: "Golden Retriever", image: "../assets/golden-retriever-dog.svg" },
       { name: "Dalmatian", image: "../assets/dalmatian-dog.svg" },
@@ -63,11 +63,11 @@ export default function SelectPet() {
     : null;
 
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", padding: "40px" }}>
-      <h2 style={{ marginBottom: "20px", color: "#222" }}>Pet Selection</h2>
+    <div style={{ fontFamily: "Arial, sans-serif", padding: "40px"}}>
+      <h2 style={{ marginBottom: "20px", color: "#fff" }}>Pet Selection</h2>
 
       <div style={{ marginBottom: "20px" }}>
-        <h3 style={{ fontSize: "16px", color: "#666", marginBottom: "10px" }}>1. Select Pet Type</h3>
+        <h3 style={{ fontSize: "16px", color: "#fff", marginBottom: "10px" }}>1. Select Pet Type</h3>
         <div style={{ display: "flex", gap: "10px" }}>
           {Object.entries(petData).map(([key, data]) => (
             <button
@@ -97,8 +97,8 @@ export default function SelectPet() {
 
       {selectedType && (
         <div style={{ marginBottom: "20px" }}>
-          <h3 style={{ fontSize: "16px", color: "#666", marginBottom: "10px" }}>2. Select Breed</h3>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <h3 style={{ fontSize: "16px", color: "#fff", marginBottom: "10px" }}>2. Select Breed</h3>
+          <div style={{ display: "grid", flexDirection: "column", gap: "10px", alignItems: "center" }}>
             <select
               value={selectedBreed}
               onChange={(e) => setSelectedBreed(e.target.value)}
@@ -109,6 +109,7 @@ export default function SelectPet() {
                 border: "1px solid #ccc",
                 borderRadius: "12px",
                 backgroundColor: "#fff",
+                color: "#666",
                 height: "50px",
                 boxSizing: "border-box"
               }}
@@ -122,7 +123,7 @@ export default function SelectPet() {
               <img 
                 src={new URL(currentBreedImage, import.meta.url).href} 
                 alt="Preview" 
-                style={{ width: "50px", height: "50px", borderRadius: "8px", objectFit: "cover", border: "1px solid #ccc" }}
+                style={{ borderRadius: "8px", objectFit: "fill", border: "1px solid #ccc" }}
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             )}

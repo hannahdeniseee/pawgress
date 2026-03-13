@@ -30,7 +30,7 @@ function AppContent() {
   return isAuthenticated ? (
     <PomodoroTimer user={dbUser || user} />
   ) : (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', objectFit: "fill" }}>
       <SelectPet />
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
         <p style={{ fontFamily: 'Arial', color: '#666' }}>Login to save your progress</p>
