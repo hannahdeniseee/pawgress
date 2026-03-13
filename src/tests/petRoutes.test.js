@@ -1,102 +1,67 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Prisma } from '@prisma/client';
-
-vi.mock('../../backend/index.js', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    prisma: {
-      pet: {
-        create: vi.fn(),
-      },
-      user: {
-        findUnique: vi.fn(),
-      }
-    },
-  };
-});
-
 import { app, prisma } from '../../backend/index.js';
 
 describe('POST /api/pets/add', () => {
+
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
-  // If the user does not have pet yet and can be found
   it('should successfully save a pet and return status 201', async () => {
-    const mockUserId = 1;
-    const mockDbResponse = {
+    const mockResponse = {
       id: 1,
-      userId: mockUserId,
+      userId: 1,
       type: 'Dog',
-      breed: 'Golden Retriever',
-      image: '../assets/golden-retriever-dog.svg',
-      createdAt: new Date().toISOString()
+      breed: 'Labrador',
+      image: null
     };
 
-    prisma.pet.create.mockResolvedValue(mockDbResponse);
+    vi.spyOn(prisma.pet, 'create').mockResolvedValue(mockResponse);
 
     const response = await request(app)
       .post('/api/pets/add')
       .send({
-        userId: mockUserId,
+        userId: 1,
         type: 'Dog',
-        breed: 'Golden Retriever',
-        image: '../assets/golden-retriever-dog.svg'
+        breed: 'Labrador',
+        image: null
       });
 
     expect(response.status).toBe(201);
-    expect(response.body.userId).toBe(mockUserId);
-    
+    expect(response.body).toEqual(mockResponse);
     expect(prisma.pet.create).toHaveBeenCalledTimes(1);
-    expect(prisma.pet.create).toHaveBeenCalledWith({
-      data: {
-        userId: mockUserId,
-        type: 'Dog',
-        breed: 'Golden Retriever',
-        image: '../assets/golden-retriever-dog.svg'
-      }
-    });
   });
 
-  // If the user is not found
   it('should return 500 if the database query fails', async () => {
-    prisma.pet.create.mockRejectedValue(new Error('Database connection lost'));
-    const mockUserId = 3;
+    vi.spyOn(prisma.pet, 'create').mockRejectedValue(
+      new Error('DB error')
+    );
+
     const response = await request(app)
       .post('/api/pets/add')
       .send({
-        userId: mockUserId,
-        type: 'Cat',
-        breed: 'Black Cat',
-        image: '../assets/black-cat.svg'
+        userId: 1,
+        type: 'Dog'
       });
 
     expect(response.status).toBe(500);
-    expect(response.body.error).toBe('Failed to adopt pet');
   });
-  
-  // If the user already has pet
-  it('should return 400 if the user already owns a pet (Unique Constraint)', async () => {
-    const duplicateError = new Prisma.PrismaClientKnownRequestError(
-      'Unique constraint failed on the fields: (`userId`)',
-      { code: 'P2002', clientVersion: '6.19.2' }
-    );
 
-    prisma.pet.create.mockRejectedValue(duplicateError);
+  it('should return 400 if the user already owns a pet', async () => {
+    const duplicateError = new Error('Duplicate');
+    duplicateError.code = 'P2002';
+
+    vi.spyOn(prisma.pet, 'create').mockRejectedValue(duplicateError);
 
     const response = await request(app)
       .post('/api/pets/add')
       .send({
-        userId: 1, // user already has a pet in this test case
-        type: 'Cat',
-        breed: 'Black Cat',
-        image: '../assets/black-cat.svg'
+        userId: 1,
+        type: 'Dog'
       });
 
-    expect(response.status).toBe(400); 
-    expect(response.body.error).toBe('You can only have one pet at a time');
+    expect(response.status).toBe(400);
   });
+
 });

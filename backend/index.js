@@ -13,7 +13,28 @@ const adapter = new PrismaMariaDb({
   database: "pawgress",
 });
 
-export const prisma = new PrismaClient({ adapter });
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: process.env.DB_PASSWORD || "",
+  database: "pawgress",
+});
+
+let prisma;
+
+if (process.env.NODE_ENV !== 'test') {
+  prisma = new PrismaClient({ adapter });
+}
+
+if (!prisma) {
+  prisma = {
+    pet: {
+      create: async () => {},
+    },
+  };
+}
+
+export { prisma };
 
 export const app = express();
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -65,4 +86,4 @@ app.post('/api/pets/add', async (req, res) => {
 //   console.log(`Backend running on port ${process.env.PORT}`);
 // });
 
-// export default app;
+export default app;
