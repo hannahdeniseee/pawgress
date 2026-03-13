@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 
-// Gets all days of the month
 const getDaysInMonth = (year, month) => {
   const date = new Date(year, month, 1);
   const days = [];
@@ -13,7 +12,8 @@ const getDaysInMonth = (year, month) => {
 
 export default function TodoCalendarWithEvents() {
   const today = new Date();
-  const todayStr = today.toLocaleDateString("en-CA");
+  const todayStr = today.toISOString().split("T")[0];
+  const API_BASE = "http://localhost:5000/api";
 
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
@@ -25,67 +25,119 @@ export default function TodoCalendarWithEvents() {
   const [eventVenue, setEventVenue] = useState("");
   const [eventDate, setEventDate] = useState(todayStr);
 
-  // Add task
-  const addTask = () => {
-    if (!newTask.trim()) return;
+  const userId = 1;
 
-    setTasks([...tasks, { id: Date.now(), name: newTask, status: "uncompleted", deadline: taskDeadline }]);
-    setNewTask("");
-  };
-
-  // Toggle task status
-  const toggleStatus = (id) => {
-    setTasks(tasks.map(task => {
-      if (task.id === id) {
-        const nextStatus = task.status === "uncompleted"
-          ? "in progress"
-          : task.status === "in progress"
-          ? "completed"
-          : "uncompleted";
-        return { ...task, status: nextStatus };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [tasksRes, eventsRes] = await Promise.all([
+          fetch(`${API_BASE}/users/${userId}/tasks`),
+          fetch(`${API_BASE}/users/${userId}/events`)
+        ]);
+        setTasks(await tasksRes.json());
+        setEvents(await eventsRes.json());
+      } catch (err) {
+        console.error(err);
       }
-      return task;
-    }));
+    };
+    fetchData();
+  }, [userId]);
+
+  // --- ADD / UPDATE / DELETE TASKS ---
+  const addTask = async () => {
+    if (!newTask.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE}/users/${userId}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newTask, deadline: taskDeadline }),
+      });
+      const savedTask = await res.json();
+      setTasks(prev => [...prev, savedTask]); // Update state immediately
+      setNewTask("");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Delete task
-  const deleteTask = (id) => setTasks(tasks.filter(task => task.id !== id));
+  const toggleStatus = async (task) => {
+    const nextStatus =
+      task.status === "uncompleted" ? "in progress" :
+      task.status === "in progress" ? "completed" :
+      "uncompleted";
 
-  // Add event
-  const addEvent = () => {
+    try {
+      const res = await fetch(`${API_BASE}/tasks/${task.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const updatedTask = await res.json();
+      setTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await fetch(`${API_BASE}/tasks/${id}`, { method: "DELETE" });
+      setTasks(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // --- ADD / DELETE EVENTS ---
+  const addEvent = async () => {
     if (!eventTitle.trim()) return;
-    setEvents([...events, { 
-      id: Date.now(), 
-      title: eventTitle, 
-      time: eventTime, 
-      venue: eventVenue, 
-      date: eventDate 
-    }]);
-    setEventTitle("");
-    setEventTime("");
-    setEventVenue("");
+    try {
+      const res = await fetch(`${API_BASE}/users/${userId}/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: eventTitle, date: eventDate, time: eventTime, venue: eventVenue }),
+      });
+      const savedEvent = await res.json();
+      setEvents(prev => [...prev, savedEvent]);
+      setEventTitle("");
+      setEventTime("");
+      setEventVenue("");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Delete event
-  const deleteEvent = (id) => setEvents(events.filter(event => event.id !== id));
+  const deleteEvent = async (id) => {
+    try {
+      await fetch(`${API_BASE}/events/${id}`, { method: "DELETE" });
+      setEvents(prev => prev.filter(e => e.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  // Group tasks and events by date
-  const tasksByDate = tasks.reduce((acc, task) => {
-    acc[task.deadline] = acc[task.deadline] || [];
-    acc[task.deadline].push(task);
-    return acc;
-  }, {});
+  // --- GROUP TASKS & EVENTS BY DATE ---
+  const tasksByDate = useMemo(() => {
+    return tasks.reduce((acc, task) => {
+      const dateStr = new Date(task.deadline).toISOString().split("T")[0];
+      if (!acc[dateStr]) acc[dateStr] = [];
+      acc[dateStr].push(task);
+      return acc;
+    }, {});
+  }, [tasks]);
 
-  const eventsByDate = events.reduce((acc, event) => {
-    acc[event.date] = acc[event.date] || [];
-    acc[event.date].push(event);
-    return acc;
-  }, {});
+  const eventsByDate = useMemo(() => {
+    return events.reduce((acc, event) => {
+      const dateStr = new Date(event.date).toISOString().split("T")[0];
+      if (!acc[dateStr]) acc[dateStr] = [];
+      acc[dateStr].push(event);
+      return acc;
+    }, {});
+  }, [events]);
 
   const days = getDaysInMonth(today.getFullYear(), today.getMonth());
-  const firstDayWeekday = days[0].getDay(); // 0 = Sunday
+  const firstDayWeekday = days[0].getDay();
 
-  // Status Color
   const getStatusColor = (status) => {
     switch (status) {
       case "completed": return "#4CAF50";
@@ -95,235 +147,68 @@ export default function TodoCalendarWithEvents() {
   };
 
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", padding: "20px" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Todo Calendar + Events</h2>
+    <div style={{ padding: 20, fontFamily: "Arial, sans-serif" }}>
+      <h2 style={{ textAlign: "center" }}>Todo Calendar + Events</h2>
+
+      {/* TODAY'S TASKS & EVENTS */}
+      <div style={{ marginBottom: 20 }}>
+        <h3>Today's Tasks & Events ({todayStr})</h3>
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {(tasksByDate[todayStr] || []).map(task => (
+            <li key={task.id}>
+              <span onClick={() => toggleStatus(task)} style={{ textDecoration: task.status === "completed" ? "line-through" : "none", cursor: "pointer" }}>
+                {task.name} ({task.status})
+              </span>
+              <button onClick={() => deleteTask(task.id)} style={{ marginLeft: 5 }}>x</button>
+            </li>
+          ))}
+          {(eventsByDate[todayStr] || []).map(event => (
+            <li key={event.id}>
+              {event.title} {event.time && `@${event.time}`} {event.venue && `(${event.venue})`}
+              <button onClick={() => deleteEvent(event.id)} style={{ marginLeft: 5 }}>x</button>
+            </li>
+          ))}
+          {!(tasksByDate[todayStr]?.length || eventsByDate[todayStr]?.length) && <li>No tasks or events today!</li>}
+        </ul>
+      </div>
 
       {/* Task Input */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="New task"
-          value={newTask}
-          onChange={e => setNewTask(e.target.value)}
-          style={{ flex: 1, padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-        />
-        <input
-          type="date"
-          value={taskDeadline}
-          onChange={e => setTaskDeadline(e.target.value)}
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-        />
-        <button
-          onClick={addTask}
-          style={{ padding: "10px 20px", borderRadius: "5px", border: "none", backgroundColor: "#4CAF50", color: "#fff", cursor: "pointer" }}
-        >
-          Add Task
-        </button>
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        <input value={newTask} onChange={e => setNewTask(e.target.value)} placeholder="New task" style={{ flex: 1 }} />
+        <input type="date" value={taskDeadline} onChange={e => setTaskDeadline(e.target.value)} />
+        <button onClick={addTask}>Add Task</button>
       </div>
 
       {/* Event Input */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "30px" }}>
-        <input
-          type="text"
-          placeholder="Event title"
-          value={eventTitle}
-          onChange={e => setEventTitle(e.target.value)}
-          style={{ flex: 1, padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-        />
-        <input
-          type="time"
-          value={eventTime}
-          onChange={e => setEventTime(e.target.value)}
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc", width: "120px" }}
-        />
-        <input
-          type="text"
-          placeholder="Venue"
-          value={eventVenue}
-          onChange={e => setEventVenue(e.target.value)}
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc", flex: 1 }}
-        />
-        <input
-          type="date"
-          value={eventDate}
-          onChange={e => setEventDate(e.target.value)}
-          style={{ padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
-        />
-        <button
-          onClick={addEvent}
-          style={{ padding: "10px 20px", borderRadius: "5px", border: "none", backgroundColor: "#2196F3", color: "#fff", cursor: "pointer" }}
-        >
-          Add Event
-        </button>
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        <input value={eventTitle} onChange={e => setEventTitle(e.target.value)} placeholder="Event title" style={{ flex: 1 }} />
+        <input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)} />
+        <input value={eventVenue} onChange={e => setEventVenue(e.target.value)} placeholder="Venue" />
+        <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} />
+        <button onClick={addEvent}>Add Event</button>
       </div>
 
-      {/* Today's Tasks + Events */}
-      <div style={{ marginBottom: "20px" }}>
-        <h3>Today's Tasks & Events ({todayStr})</h3>
-         <p>So sorry I am sick (w/ flu-like symptoms) will update this later on - Hannah :(</p>
-
-        {/* Tasks */}
-        {tasksByDate[todayStr]?.length ? (
-          <ul style={{ padding: 0, listStyle: "none" }}>
-            {tasksByDate[todayStr].map(task => (
-              <li key={task.id} style={{ marginBottom: "5px" }}>
-                <span
-                  onClick={() => toggleStatus(task.id)}
-                  style={{
-                    textDecoration: task.status === "completed" ? "line-through" : "none",
-                    cursor: "pointer",
-                    marginRight: "10px",
-                  }}
-                >
-                  {task.name}
-                </span>
-                <span
-                  style={{
-                    padding: "2px 6px",
-                    fontSize: "12px",
-                    borderRadius: "4px",
-                    backgroundColor: getStatusColor(task.status),
-                    color: "#fff",
-                    marginRight: "5px"
-                  }}
-                >
-                  {task.status}
-                </span>
-                <button
-                  onClick={() => deleteTask(task.id)}
-                  style={{
-                    padding: "2px 6px",
-                    fontSize: "12px",
-                    borderRadius: "4px",
-                    border: "none",
-                    backgroundColor: "#e53935",
-                    color: "#fff",
-                    cursor: "pointer",
-                  }}
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : <p>No tasks for today!</p>}
-
-        {/* Events */}
-        {eventsByDate[todayStr]?.length ? (
-          <ul style={{ padding: 0, listStyle: "none" }}>
-            {eventsByDate[todayStr].map(event => (
-              <li key={event.id} style={{ marginBottom: "5px" }}>
-                <strong>{event.title}</strong> - {event.time} @ {event.venue}
-                <button
-                  onClick={() => deleteEvent(event.id)}
-                  style={{
-                    padding: "2px 6px",
-                    fontSize: "12px",
-                    borderRadius: "4px",
-                    border: "none",
-                    backgroundColor: "#e53935",
-                    color: "#fff",
-                    cursor: "pointer",
-                    marginLeft: "10px"
-                  }}
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : <p>No events for today!</p>}
-      </div>
-
-      {/* Calendar Header */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(7, 1fr)",
-        textAlign: "center",
-        fontWeight: "bold",
-        marginBottom: "5px"
-      }}>
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => <div key={day}>{day}</div>)}
-      </div>
-
-      {/* Calendar Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "5px" }}>
+      {/* Calendar */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 5 }}>
         {Array(firstDayWeekday).fill(null).map((_, i) => <div key={`empty-${i}`} />)}
-        {getDaysInMonth(today.getFullYear(), today.getMonth()).map(day => {
-          const dateStr = day.toLocaleDateString("en-CA");
+        {days.map(day => {
+          const dateStr = day.toISOString().split("T")[0];
+          const dayTasks = tasksByDate[dateStr] || [];
+          const dayEvents = eventsByDate[dateStr] || [];
           return (
-            <div key={dateStr} style={{
-              minHeight: "120px",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-              padding: "5px",
-              boxSizing: "border-box",
-              backgroundColor: "#f9f9f9",
-              display: "flex",
-              flexDirection: "column"
-            }}>
-              <div style={{ fontWeight: "bold", marginBottom: "5px" }}>{day.getDate()}</div>
+            <div key={dateStr} style={{ border: "1px solid #ccc", minHeight: 120, padding: 5 }}>
+              <strong>{day.getDate()}</strong>
               <div style={{ flex: 1, overflowY: "auto" }}>
-                {/* Tasks */}
-                {(tasksByDate[dateStr] || []).map(task => (
-                  <div key={task.id} style={{
-                    padding: "2px 5px",
-                    borderRadius: "5px",
-                    backgroundColor: getStatusColor(task.status),
-                    color: "#fff",
-                    fontSize: "12px",
-                    marginBottom: "3px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}>
-                    <span onClick={() => toggleStatus(task.id)}>{task.name}</span>
-                    <button
-                      onClick={() => deleteTask(task.id)}
-                      style={{
-                        backgroundColor: "#e53935",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "1px 4px",
-                        cursor: "pointer",
-                        fontSize: "10px"
-                      }}
-                    >
-                      x
-                    </button>
+                {dayTasks.map(task => (
+                  <div key={task.id} style={{ backgroundColor: getStatusColor(task.status) }}>
+                    {task.name}
+                    <button onClick={() => deleteTask(task.id)}>x</button>
                   </div>
                 ))}
-
-                {/* Events */}
-                {(eventsByDate[dateStr] || []).map(event => (
-                  <div key={event.id} style={{
-                    padding: "2px 5px",
-                    borderRadius: "5px",
-                    backgroundColor: "#2196F3",
-                    color: "#fff",
-                    fontSize: "12px",
-                    marginBottom: "3px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}>
-                    <span>{event.title} {event.time && `@ ${event.time}`}</span>
-                    <button
-                      onClick={() => deleteEvent(event.id)}
-                      style={{
-                        backgroundColor: "#e53935",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        padding: "1px 4px",
-                        cursor: "pointer",
-                        fontSize: "10px"
-                      }}
-                    >
-                      x
-                    </button>
+                {dayEvents.map(event => (
+                  <div key={event.id} style={{ backgroundColor: "#2196F3" }}>
+                    {event.title} {event.time && `@${event.time}`}
+                    <button onClick={() => deleteEvent(event.id)}>x</button>
                   </div>
                 ))}
               </div>
@@ -332,5 +217,5 @@ export default function TodoCalendarWithEvents() {
         })}
       </div>
     </div>
-  );
+  )
 }
