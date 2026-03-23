@@ -6,6 +6,7 @@ import PomodoroTimer from './pages/PomodoroTimer.jsx'
 import PetShop from './pages/PetShop.jsx'
 import Todo from "./pages/Todo.jsx";
 import Friends from "./pages/Friends.jsx";
+import Profile from "./pages/Profile.jsx"
 
 function AppContent() {
   const { isLoading, isAuthenticated, user, logout } = useAuth0();
@@ -18,9 +19,7 @@ function AppContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           auth0Id: user.sub,
-          auth0Id: user.sub,
           username: user.nickname || user.name || user.email,
-          avatarUrl: user.picture || null,
           avatarUrl: user.picture || null,
         }),
       })
@@ -55,10 +54,13 @@ function AppContent() {
       >
         Logout
       </button>
-
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <Profile currentUser={dbUser} />
+    </div>
+      
       <PomodoroTimer user={currentUser} />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <SelectPet />
+        {dbUser && <SelectPet currentUser={dbUser} />}
       </div>
       {dbUser && <PetShop userId={dbUser.id} />}
       <Todo />

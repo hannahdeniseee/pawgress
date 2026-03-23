@@ -14,35 +14,22 @@ const adapter = new PrismaMariaDb({
   database: "pawgress",
 });
 
-const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: process.env.DB_PASSWORD || "",
-  database: "pawgress",
-});
+export let prisma = new PrismaClient({ adapter });
 
-let prisma;
-
-if (process.env.NODE_ENV !== 'test') {
-  prisma = new PrismaClient({ adapter });
-};
-
-if (!prisma) {
+if (process.env.NODE_ENV == "test") {
   prisma = {
     pet: {
       create: async () => {},
     },
   };
-};
-
-export { prisma };
+}
 
 export const app = express();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
 app.post('/api/users/add', async (req, res) => {
-  const { id, username, avatarUrl } = req.body;
+  const { auth0Id, username, avatarUrl } = req.body;
 
   if (!auth0Id) {
     return res.status(400).json({ error: "auth0Id is required" });
@@ -59,6 +46,45 @@ app.post('/api/users/add', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "User save error" });
+  }
+});
+
+app.post('/api/pets/add', async (req, res) => {
+  try {
+    const newPet = await prisma.pet.create({
+      data: {
+        userId: Number(req.body.userId),
+        type: req.body.type,
+        breed: req.body.breed,
+        image: req.body.image,
+      },
+    });
+    
+    res.status(201).json(newPet);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'You can only have one pet at a time' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Failed to adopt pet' });
+  }
+});
+
+app.get('/api/profile/:auth0Id', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { auth0Id: req.params.auth0Id },
+      include: { pet: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -342,23 +368,6 @@ app.delete("/api/events/:id", async (req, res) => {
 
 app.listen(process.env.PORT, () => {
   console.log(`Backend running on port ${process.env.PORT}`);
-});
-app.get('/api/profile/:auth0Id', async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { auth0Id: req.params.auth0Id },
-      include: { pet: true },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.json(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Server error' });
-  }
 });
 
 // app.listen(process.env.PORT, () => {

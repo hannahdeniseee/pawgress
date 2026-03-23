@@ -2,47 +2,72 @@ import { useState, useEffect } from "react";
 import goldenDog from "../assets/golden-retriever-dog.svg";
 import dalmatianDog from "../assets/dalmatian-dog.svg";
 import beagleDog from "../assets/beagle-dog.svg";
-
 import whiteCat from "../assets/white-cat.svg";
 import blackCat from "../assets/black-cat.svg";
 import orangeCat from "../assets/orange-cat.svg";
-
 import blueBird from "../assets/blue-bird.svg";
 import yellowBird from "../assets/yellow-bird.svg";
 import pinkBird from "../assets/pink-bird.svg";
 
+const imageMap = {
+  "../assets/golden-retriever-dog.svg": goldenDog,
+  "../assets/dalmatian-dog.svg": dalmatianDog,
+  "../assets/beagle-dog.svg": beagleDog,
+  "../assets/white-cat.svg": whiteCat,
+  "../assets/black-cat.svg": blackCat,
+  "../assets/orange-cat.svg": orangeCat,
+  "../assets/blue-bird.svg": blueBird,
+  "../assets/yellow-bird.svg": yellowBird,
+  "../assets/pink-bird.svg": pinkBird,
+};
+
 const petData = {
   dog: {
     name: "Dog",
-    image: goldenDog,
+    image: "../assets/golden-retriever-dog.svg",
     breeds: [
-      { name: "Golden Retriever", image: goldenDog },
-      { name: "Dalmatian", image: dalmatianDog },
-      { name: "Beagle", image: beagleDog },
+      { name: "Golden Retriever", image: "../assets/golden-retriever-dog.svg" },
+      { name: "Dalmatian", image: "../assets/dalmatian-dog.svg" },
+      { name: "Beagle", image: "../assets/beagle-dog.svg" },
     ],
   },
   cat: {
     name: "Cat",
-    image: whiteCat,
+    image: "../assets/white-cat.svg",
     breeds: [
-      { name: "Black Cat", image: blackCat },
-      { name: "Orange Cat", image: orangeCat },
-      { name: "White Cat", image: whiteCat }
+      { name: "Black Cat", image: "../assets/black-cat.svg" },
+      { name: "Orange Cat", image: "../assets/orange-cat.svg" },
+      { name: "White Cat", image: "../assets/white-cat.svg" }
     ],
   },
   bird: {
     name: "Bird",
-    image: blueBird,
+    image: "../assets/blue-bird.svg",
     breeds: [
-      { name: "Yellow Bird", image: yellowBird },
-      { name: "Pink Bird", image: pinkBird },
-      { name: "Blue Bird", image: blueBird }
+      { name: "Yellow Bird", image: "../assets/yellow-bird.svg" },
+      { name: "Pink Bird", image: "../assets/pink-bird.svg" },
+      { name: "Blue Bird", image: "../assets/blue-bird.svg" }
     ],
   },
 };
 
-export default function SelectPet() {
+export default function SelectPet({ currentUser }) {
   const [pets, setPets] = useState([]);
+
+  useEffect(() => {
+  if (!currentUser) return;
+
+  fetch(`http://localhost:5000/api/profile/${currentUser.auth0Id}`)
+    .then(res => res.json())
+    .then(data => {
+      console.log("pet from DB:", data.pet);
+      if (data.pet && data.pet.length > 0) {
+        setPets(data.pet);
+      }
+    })
+    .catch(err => console.error("Failed to load pet:", err));
+  }, [currentUser]);
+
   const [selectedType, setSelectedType] = useState(null);
   const [selectedBreed, setSelectedBreed] = useState("");
 
@@ -56,7 +81,7 @@ export default function SelectPet() {
     setSelectedBreed("");
   };
 
-  const selectPet = () => {
+  const selectPet = async () => {
     // Check if they already have a pet before adding
     if (hasPet) {
       alert("You can only have one pet at a time!");
@@ -65,16 +90,34 @@ export default function SelectPet() {
 
     if (selectedType && selectedBreed) {
       const breedInfo = petData[selectedType].breeds.find(b => b.name === selectedBreed);
-      const newPet = {
-        type: petData[selectedType].name,
-        breed: selectedBreed,
-        image: breedInfo.image,
-        id: Date.now(),
-      };
+      console.log("currentUser:", currentUser);
+      try {
+        const res = await fetch("http://localhost:5000/api/pets/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            type: petData[selectedType].name,
+            breed: selectedBreed,
+            image: breedInfo.image,
+          }),
+        });
 
-      setPets([newPet]); // Replace or set to a single array item
-      setSelectedType(null);
-      setSelectedBreed("");
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error);
+          return;
+        }
+
+        const newPet = await res.json();
+        setPets([newPet]);
+        setSelectedType(null);
+        setSelectedBreed("");
+
+      } catch (err) {
+        console.error(err);
+        alert("Failed to save pet");
+      }
     }
   };
 
@@ -113,7 +156,7 @@ export default function SelectPet() {
                   gap: "10px"
                 }}
               >
-                <img src={new URL(data.image, import.meta.url).href} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} />
+                <img src={imageMap[data.image]} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} />
                 <span style={{ fontWeight: "bold", color: "#222" }}>{data.name}</span>
               </button>
             ))}
@@ -148,7 +191,7 @@ export default function SelectPet() {
             </select>
             {currentBreedImage && (
               <img 
-                src={new URL(currentBreedImage, import.meta.url).href} 
+                src={imageMap[currentBreedImage]}
                 alt="Preview" 
                 style={{ borderRadius: "8px", objectFit: "fill", border: "1px solid #ccc" }}
                 onError={(e) => { e.target.style.display = 'none'; }}
@@ -196,7 +239,7 @@ export default function SelectPet() {
             boxShadow: "0 3px 6px rgba(0,0,0,0.05)"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <img src={new URL(pet.image, import.meta.url).href} alt={pet.breed} style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} />
+              <img src={imageMap[pet.image] || pet.image} alt={pet.breed} style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} />
               <div>
                 <span style={{ fontSize: "16px", color: "#222", fontWeight: "bold", marginRight: "10px" }}>{pet.breed}</span>
                 <span style={{ fontSize: "11px", fontWeight: "bold", padding: "2px 8px", borderRadius: "12px", backgroundColor: "#4CAF50", color: "#fff", verticalAlign: "middle" }}>

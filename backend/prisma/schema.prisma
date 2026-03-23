@@ -20,6 +20,7 @@ model User {
 
   tasks  Task[]
   events Event[]
+  pet    Pet[]
 }
 
 model Friendship {
@@ -75,4 +76,14 @@ model Event {
   user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "Event_userId_fkey")
+}
+
+model Pet {
+  id        Int      @id @default(autoincrement()) @unique
+  userId    Int      @unique
+  type      String
+  breed     String
+  image     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
