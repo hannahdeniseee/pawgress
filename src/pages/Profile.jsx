@@ -26,9 +26,11 @@ const Profile = () => {
         try {
             setLoading(true);
           
+            const encodedId = encodeURIComponent(user.sub);
+
             const [profileRes, statsRes] = await Promise.all([
-                fetch(`http://localhost:5000/api/profile/${user.sub}`),
-                fetch(`http://localhost:5000/api/profile/${user.sub}/stats`)
+                fetch(`http://localhost:5000/api/profile/${encodedId}`),
+                fetch(`http://localhost:5000/api/stats?auth0Id=${encodedId}`)
             ]);
 
             if (!profileRes.ok) throw new Error('Profile not found');
@@ -85,18 +87,18 @@ const Profile = () => {
         {/* Pet Information */}
         <div className="pet-section" style={{ marginBottom: '2rem' }}>
             <h3>Your Companion</h3>
-            {profile.pet ? (
+            {profile.pet && profile.pet.length > 0 ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#f9f9f9', padding: '1rem', borderRadius: '8px' }}>
                 {/* Note: Ensure the image path resolves correctly in your actual public/assets folder */}
                 <img 
-                src={profile.pet.image} 
-                alt={profile.pet.type} 
+                src={profile.pet[0].image} 
+                alt={profile.pet[0].type} 
                 style={{ width: '80px', height: '80px', objectFit: 'contain' }} 
                 />
                 <div>
-                <p><strong>Type:</strong> {profile.pet.type}</p>
-                <p><strong>Breed:</strong> {profile.pet.breed}</p>
-                <p><strong>Adopted:</strong> {new Date(profile.pet.createdAt).toLocaleDateString()}</p>
+                <p><strong>Type:</strong> {profile.pet[0].type}</p>
+                <p><strong>Breed:</strong> {profile.pet[0].breed}</p>
+                <p><strong>Adopted:</strong> {new Date(profile.pet[0].createdAt).toLocaleDateString()}</p>
                 </div>
             </div>
             ) : (

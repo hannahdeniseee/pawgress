@@ -60,7 +60,6 @@ export default function SelectPet({ currentUser }) {
   fetch(`http://localhost:5000/api/profile/${currentUser.auth0Id}`)
     .then(res => res.json())
     .then(data => {
-      console.log("pet from DB:", data.pet);
       if (data.pet && data.pet.length > 0) {
         setPets(data.pet);
       }
@@ -90,7 +89,6 @@ export default function SelectPet({ currentUser }) {
 
     if (selectedType && selectedBreed) {
       const breedInfo = petData[selectedType].breeds.find(b => b.name === selectedBreed);
-      console.log("currentUser:", currentUser);
       try {
         const res = await fetch("http://localhost:5000/api/pets/add", {
           method: "POST",
