@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `user` MODIFY `coins` INTEGER NOT NULL DEFAULT 100;
