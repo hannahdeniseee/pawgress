@@ -101,16 +101,46 @@ app.get("/api/users/search", async (req, res) => {
 });
 
 // Return a user and their inventory
+// app.get("/api/users/:id", async (req, res) => {
+//   const user = await prisma.user.findUnique({
+//     where: { id: Number(req.params.id) },
+//     include: {
+//       inventory: true, 
+//       equipped: true,
+//       pet: true,
+//     }
+//     });
+
+//   res.json(user);
+
+// });
+
 app.get("/api/users/:id", async (req, res) => {
-  const user = await prisma.user.findUnique({
-    where: { id: Number(req.params.id) },
-    include: {
-      inventory: true, 
-    }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: Number(req.params.id) },
+      include: {
+        inventory: true,
+        equipped: true,
+        pet: true,
+      }
     });
 
-  res.json(user);
+    if (!user) return res.status(404).json({ error: "User not found" });
 
+    const equippedMap = Object.fromEntries(
+      user.equipped.map((e) => [e.slot, e.accessoryId])
+    );
+
+    res.json({
+      ...user,
+      equipped: equippedMap,
+      petImage: user.pet[0]?.image || null,  // ← this is what the frontend reads
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Increment or decrement a user's coin balance by a given amount
@@ -397,6 +427,59 @@ app.get('/api/profile/:auth0Id', async (req, res) => {
   }
 });
 
+// Equip an accessory into a slot (replaces whatever was there before)
+app.put("/api/users/:id/equipped", async (req, res) => {
+  const { id } = req.params;
+  const { slot, accessoryId } = req.body;
+ 
+  if (!slot || !accessoryId) {
+    return res.status(400).json({ error: "slot and accessoryId are required" });
+  }
+ 
+  try {
+    const equipped = await prisma.equippedItem.upsert({
+      where: {
+        userId_slot: { userId: Number(id), slot },
+      },
+      update: { accessoryId: Number(accessoryId) },
+      create: {
+        userId: Number(id),
+        slot,
+        accessoryId: Number(accessoryId),
+      },
+    });
+ 
+    res.json(equipped);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Equip error" });
+  }
+});
+ 
+ 
+// Unequip an accessory from a slot
+app.delete("/api/users/:id/equipped", async (req, res) => {
+  const { id } = req.params;
+  const { slot } = req.body;
+ 
+  if (!slot) {
+    return res.status(400).json({ error: "slot is required" });
+  }
+ 
+  try {
+    await prisma.equippedItem.delete({
+      where: {
+        userId_slot: { userId: Number(id), slot },
+      },
+    });
+ 
+    res.json({ success: true });
+  } catch (err) {
+    if (err.code === "P2025") return res.json({ success: true }); // already unequipped, that's fine
+    console.error(err);
+    res.status(500).json({ error: "Unequip error" });
+  }
+});
 
 app.listen(process.env.PORT, () => {
   console.log(`Backend running on port ${process.env.PORT}`);

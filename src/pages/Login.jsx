@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import Todo from "./Todo.jsx"; 
+import "../styles/Login.css";
 
 function Login(){
   const {
@@ -42,7 +42,7 @@ function Login(){
   if (isLoading) return "Loading...";
 
   return isAuthenticated ? (
-    <>
+    <div className="login-page">
       <img
         src={user.picture}
         alt={user.name}
@@ -52,15 +52,18 @@ function Login(){
       <p><strong>Email:</strong> {user.email}</p>
 
       <button onClick={logout}>Logout</button>
-       <Todo />
-    </>
+      
+    </div>
   ) : (
     <>
       {error && <p>Error: {error.message}</p>}
 
-      <button onClick={signup}>Signup</button>
-
-      <button onClick={login}>Login</button>
+    <div className="login-page">
+      <div class="button-container">
+        <button onClick={signup}>Signup</button>
+        <button onClick={login}>Login</button>
+      </div>
+    </div>
     </>
   );
 }

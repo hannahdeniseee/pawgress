@@ -21,6 +21,7 @@ model User {
   tasks  Task[]
   events Event[]
   pet    Pet[]
+  equipped  EquippedItem[]
 }
 
 model Friendship {
@@ -79,11 +80,22 @@ model Event {
 }
 
 model Pet {
-  id        Int      @id @default(autoincrement()) @unique
+  id        Int      @id @default(autoincrement())
   userId    Int      @unique
   type      String
   breed     String
   image     String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EquippedItem {
+  id          Int    @id @default(autoincrement())
+  userId      Int
+  slot        String
+  accessoryId Int
+
+  user        User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, slot])
 }

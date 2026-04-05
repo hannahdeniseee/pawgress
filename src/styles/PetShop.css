@@ -1,17 +1,42 @@
+.page {
+  background: linear-gradient(180deg, #FFF 0%, #D9DEF4 100%);
+  min-height: 100vh;
+  margin: 0;
+  font-family: "Jersey 15", serif;
+  font-size: 25px;
+}
+
+.shop-banner {
+  width: 100%;
+}
+
 .shop-container {
-  max-width: 500px;
-  margin: 20px auto;
+  max-width: 100%;
+  margin: 50px;
   padding: 16px;
+  width: 90vw;
+  min-height: 90vh;
 }
 
 .shop-header {
+  position: fixed;
+  top: 28px;
+  right: 28px;
+  z-index: 10;
+  background: white;
+  border: 2.5px solid #4E56C0;
+  border-radius: 999px;
+  padding: 8px 20px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 .coin-display {
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #4E56C0;
+  font-family: "Jersey 15", serif;
 }
 
 .shop-message {
@@ -40,16 +65,24 @@
 
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 80%;
+  margin: 50px auto;
 }
 
 .shop-card {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 10px;
+  border: 2px solid #4E56C0;
+  border-radius: 15px;
+  padding: 20px;
   text-align: center;
   background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 180px;
 }
 
 .shop-card.disabled {
@@ -58,39 +91,56 @@
 
 .shop-image {
   width: 60px;
-  height: auto;
+  height: 60px;
 }
 
 .shop-price {
-  color: #555;
-  margin: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.shop-price img {
+  width: 20px;
+  margin: 0 6px;
 }
 
 .shop-button {
-  width: 100%;
-}
-
-.inventory-list {
-  margin-top: 8px;
+  width: 65%;
+  border-radius: 9.219px;
+  border: 2.766px solid #4E56C0;
+  background: linear-gradient(180deg, #ADBBFA 0%, #8799ED 100%);
+  color: white;
+  display: block;
+  margin: 0 auto;
+  font-size: 20px;
 }
 
 .inventory-empty {
   color: #aaa;
 }
 
-.inventory-row {
+.back-button {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  background: white;
+  border: 2.5px solid #4E56C0;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #4E56C0;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  gap: 6px;
+  text-decoration: none;
+  font-family: "Jersey 15", serif;
+  transition: background 0.15s;
+  z-index: 10;
 }
 
-.inventory-image {
-  width: 40px;
-}
-
-.inventory-slot {
-  color: #888;
-  font-size: 12px;
+.coin-img {
+  width: 30px;
 }
