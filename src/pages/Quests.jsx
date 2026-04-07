@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
+import "../styles/Quests.css";
 
 // --- HELPERS ---
+// Get all days in a month for calendar display
 const getDaysInMonth = (year, month) => {
   const date = new Date(year, month, 1);
   const days = [];
@@ -11,58 +13,32 @@ const getDaysInMonth = (year, month) => {
   return days;
 };
 
+// Status color helpers
 const sBg = (s) => s === "completed" ? "#EAF3DE" : s === "in progress" ? "#FAEEDA" : "#FCEBEB";
 const sTx = (s) => s === "completed" ? "#3B6D11" : s === "in progress" ? "#854F0B" : "#A32D2D";
 const sDt = (s) => s === "completed" ? "#1D9E75" : s === "in progress" ? "#EF9F27" : "#E24B4A";
+// Cycle task status: uncompleted → in progress → completed → uncompleted
 const nxt = (s) => s === "uncompleted" ? "in progress" : s === "in progress" ? "completed" : "uncompleted";
 
+// API configuration
 const API_BASE = "http://localhost:5000/api";
 const userId = 1;
+const USE_API = false; // Use local state instead of backend for now
 
-const USE_API = false;
-
-// --- STYLES ---
-const S = {
-  wrap: { padding: "1.5rem", fontFamily: "system-ui, sans-serif", color: "#1a1a1a", maxWidth: 960, margin: "0 auto" },
-  sl: { fontSize: 12, fontWeight: 500, color: "#888", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.75rem" },
-  sec: { marginBottom: "2rem" },
-  qc: { background: "#f5f5f3", borderRadius: 12, padding: "1rem 1.25rem", marginBottom: "0.5rem" },
-  qh: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" },
-  pb: { height: 6, background: "#e8e8e6", borderRadius: 3, overflow: "hidden" },
-  ts: { background: "#fff", border: "0.5px solid #e0e0e0", borderRadius: 12, padding: "1rem 1.25rem" },
-  er: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "0.5px solid #f0f0f0" },
-  dot: { width: 8, height: 8, borderRadius: "50%", flexShrink: 0 },
-  en: { flex: 1, fontSize: 14, cursor: "pointer" },
-  em: { fontSize: 12, color: "#888" },
-  db: { background: "none", border: "none", color: "#bbb", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 4px" },
-  ar: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" },
-  inp: { flex: 1, fontSize: 13, padding: "6px 10px", border: "0.5px solid #ccc", borderRadius: 8, minWidth: 120 },
-  inpSm: { fontSize: 13, padding: "6px 10px", border: "0.5px solid #ccc", borderRadius: 8 },
-  btn: { whiteSpace: "nowrap", fontSize: 13, padding: "6px 14px", border: "0.5px solid #ccc", borderRadius: 8, background: "#f5f5f3", cursor: "pointer" },
-  cg: { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 4 },
-  cdh: { fontSize: 11, fontWeight: 500, color: "#888", textAlign: "center", padding: "4px 0" },
-  cc: { border: "0.5px solid #e0e0e0", borderRadius: 8, minHeight: 90, padding: 6, background: "#fff" },
-  ccT: { border: "1.5px solid #378ADD", borderRadius: 8, minHeight: 90, padding: 6, background: "#fff" },
-  cd: { fontSize: 12, fontWeight: 500, color: "#888", marginBottom: 4 },
-  cdT: { fontSize: 12, fontWeight: 500, color: "#185FA5", marginBottom: 4 },
-  chip: { fontSize: 11, padding: "2px 5px", borderRadius: 4, marginBottom: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 },
-  chipTxt: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 },
-  chipDel: { background: "none", border: "none", cursor: "pointer", fontSize: 11, opacity: 0.6, padding: 0, lineHeight: 1, color: "inherit" },
-  bdg: { display: "inline-block", fontSize: 11, padding: "2px 8px", borderRadius: 8, fontWeight: 500 },
-  msg: { fontSize: 13, color: "#888" },
-};
-
+// Simple unique ID generator for local state
 let _id = 1;
 const uid = () => _id++;
 
 export default function TodoCalendarWithQuests() {
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
+  // State for tasks
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [taskDeadline, setTaskDeadline] = useState(todayStr);
 
+  // State for events
   const [events, setEvents] = useState([]);
   const [eventTitle, setEventTitle] = useState("");
   const [eventTime, setEventTime] = useState("");
@@ -70,8 +46,10 @@ export default function TodoCalendarWithQuests() {
   const [eventDate, setEventDate] = useState(todayStr);
 
   // --- TASK HANDLERS ---
+  
+  // Add a new task
   const addTask = async () => {
-    if (!newTask.trim()) return;
+    if (!newTask.trim()) return; // Don't add empty tasks
     if (USE_API) {
       try {
         const res = await fetch(`${API_BASE}/users/${userId}/tasks`, {
@@ -83,11 +61,13 @@ export default function TodoCalendarWithQuests() {
         setTasks((prev) => [...prev, { ...saved, deadline: saved.deadline.split("T")[0] }]);
       } catch (err) { console.error(err); }
     } else {
+      // Local state version
       setTasks((prev) => [...prev, { id: uid(), name: newTask, deadline: taskDeadline, status: "uncompleted" }]);
     }
-    setNewTask("");
+    setNewTask(""); // Clear input
   };
 
+  // Toggle task status (uncompleted → in progress → completed)
   const toggleStatus = async (task) => {
     const next = nxt(task.status);
     if (USE_API) {
@@ -105,6 +85,7 @@ export default function TodoCalendarWithQuests() {
     }
   };
 
+  // Delete a task
   const deleteTask = async (id) => {
     if (USE_API) {
       try { await fetch(`${API_BASE}/tasks/${id}`, { method: "DELETE" }); } catch (err) { console.error(err); }
@@ -113,24 +94,46 @@ export default function TodoCalendarWithQuests() {
   };
 
   // --- EVENT HANDLERS ---
+  
+  // Add a new event
   const addEvent = async () => {
-    if (!eventTitle.trim()) return;
+    if (!eventTitle.trim()) return; // Don't add empty events
+    
+    // Use the selected date or today if not set
+    const formattedDate = eventDate || todayStr;
+    
     if (USE_API) {
       try {
         const res = await fetch(`${API_BASE}/users/${userId}/events`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: eventTitle, date: eventDate, time: eventTime, venue: eventVenue }),
+          body: JSON.stringify({ 
+            title: eventTitle, 
+            date: formattedDate, 
+            time: eventTime, 
+            venue: eventVenue 
+          }),
         });
         const saved = await res.json();
         setEvents((prev) => [...prev, saved]);
       } catch (err) { console.error(err); }
     } else {
-      setEvents((prev) => [...prev, { id: uid(), title: eventTitle, date: eventDate, time: eventTime, venue: eventVenue }]);
+      // Local state version
+      setEvents((prev) => [...prev, { 
+        id: uid(), 
+        title: eventTitle, 
+        date: formattedDate,
+        time: eventTime, 
+        venue: eventVenue 
+      }]);
     }
-    setEventTitle(""); setEventTime(""); setEventVenue("");
+    // Clear all event inputs
+    setEventTitle(""); 
+    setEventTime(""); 
+    setEventVenue("");
   };
 
+  // Delete an event
   const deleteEvent = async (id) => {
     if (USE_API) {
       try { await fetch(`${API_BASE}/events/${id}`, { method: "DELETE" }); } catch (err) { console.error(err); }
@@ -139,23 +142,41 @@ export default function TodoCalendarWithQuests() {
   };
 
   // --- DERIVED DATA ---
+  
+  // Group tasks by their deadline date
   const tasksByDate = useMemo(() =>
-    tasks.reduce((acc, t) => { (acc[t.deadline] ??= []).push(t); return acc; }, {}),
+    tasks.reduce((acc, t) => { 
+      const taskDate = t.deadline ? t.deadline.split('T')[0] : t.deadline; // Ensure YYYY-MM-DD format
+      (acc[taskDate] ??= []).push(t); // Create array if doesn't exist, then add task
+      return acc; 
+    }, {}),
     [tasks]
   );
 
+  // Group events by their date
   const eventsByDate = useMemo(() =>
-    events.reduce((acc, e) => { (acc[e.date] ??= []).push(e); return acc; }, {}),
+    events.reduce((acc, e) => { 
+      const eventDate = e.date ? e.date.split('T')[0] : e.date; // Ensure YYYY-MM-DD format
+      (acc[eventDate] ??= []).push(e); // Create array if doesn't exist, then add event
+      return acc; 
+    }, {}),
     [events]
   );
 
+  // Calculate quest progress (daily and weekly)
   const quests = useMemo(() => {
+    // Daily quest: Count completed tasks for today
     const todayTasks = tasksByDate[todayStr] || [];
     const dailyDone = todayTasks.filter((t) => t.status === "completed").length;
 
+    // Weekly quest: Count completed tasks in current week (Sunday to Saturday)
     const dow = today.getDay();
-    const ws = new Date(today); ws.setDate(today.getDate() - dow); ws.setHours(0, 0, 0, 0);
-    const we = new Date(ws); we.setDate(ws.getDate() + 6); we.setHours(23, 59, 59, 999);
+    const ws = new Date(today); 
+    ws.setDate(today.getDate() - dow); // Start of week (Sunday)
+    ws.setHours(0, 0, 0, 0);
+    const we = new Date(ws); 
+    we.setDate(ws.getDate() + 6); // End of week (Saturday)
+    we.setHours(23, 59, 59, 999);
     const weekDone = tasks.filter((t) => {
       const d = new Date(t.deadline + "T00:00:00");
       return t.status === "completed" && d >= ws && d <= we;
@@ -163,123 +184,204 @@ export default function TodoCalendarWithQuests() {
 
     return [
       { title: "Complete 5 tasks today", target: 5, progress: dailyDone, color: "#1D9E75" },
-      { title: "Complete 20 tasks this week", target: 20, progress: weekDone, color: "#378ADD" },
+      { title: "Complete 20 tasks this week", target: 20, progress: weekDone, color: "#4E56C0" },
     ];
   }, [tasksByDate, tasks, todayStr]);
 
+  // Get all days in current month for calendar grid
   const days = getDaysInMonth(today.getFullYear(), today.getMonth());
-  const firstDayWeekday = days[0].getDay();
+  const firstDayWeekday = days[0].getDay(); // Day of week for first day (0 = Sunday)
 
   return (
-    <div style={S.wrap}>
+    <div className="quests-root">
+      <div className="quests-card">
+        {/* Header */}
+        <div className="quests-header">
+          <span className="quests-title">🍅 Quests & Tasks</span>
+        </div>
 
-      {/* QUESTS */}
-      <div style={S.sec}>
-        <div style={S.sl}>Quests</div>
-        {quests.map((q) => (
-          <div key={q.title} style={{ ...S.qc, opacity: q.progress >= q.target ? 0.7 : 1 }}>
-            <div style={S.qh}>
-              <span style={{ fontSize: 14, fontWeight: 500 }}>{q.title}{q.progress >= q.target ? " ✓" : ""}</span>
-              <span style={{ fontSize: 13, color: "#888" }}>{q.progress} / {q.target}</span>
-            </div>
-            <div style={S.pb}>
-              <div style={{ height: "100%", borderRadius: 3, width: `${Math.min(100, (q.progress / q.target) * 100)}%`, background: q.color, transition: "width 0.3s" }} />
+        <div className="quests-panel">
+          {/* ===== QUESTS SECTION ===== */}
+          <div>
+            <div className="quests-section-header">Quests</div>
+            {quests.map((q) => (
+              <div key={q.title} className="quest-card">
+                <div className="quest-header">
+                  <span className="quest-title">{q.title}{q.progress >= q.target ? " ✓" : ""}</span>
+                  <span className="quest-progress-text">{q.progress} / {q.target}</span>
+                </div>
+                <div className="quest-progress-bar">
+                  <div 
+                    className="quest-progress-fill" 
+                    style={{ 
+                      width: `${Math.min(100, (q.progress / q.target) * 100)}%`, 
+                      background: q.color 
+                    }} 
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ===== TODAY SECTION ===== */}
+          <div className="today-section">
+            <div className="today-header">Today — {todayStr}</div>
+            {/* Empty state message */}
+            {!(tasksByDate[todayStr]?.length || eventsByDate[todayStr]?.length) && (
+              <div className="empty-state">✨ No tasks or events today</div>
+            )}
+            {/* Display today's tasks */}
+            {(tasksByDate[todayStr] || []).map((task) => (
+              <div key={task.id} className="task-item">
+                <div className={`task-status-dot status-${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`} />
+                <span
+                  onClick={() => toggleStatus(task)}
+                  className={`task-name ${task.status === "completed" ? "completed" : ""}`}
+                >
+                  {task.name}
+                </span>
+                <span className={`status-badge ${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`}>
+                  {task.status}
+                </span>
+                <button className="delete-btn" onClick={() => deleteTask(task.id)}>×</button>
+              </div>
+            ))}
+            {/* Display today's events */}
+            {(eventsByDate[todayStr] || []).map((ev) => (
+              <div key={ev.id} className="event-item">
+                <div className="task-status-dot" style={{ background: "#4E56C0" }} />
+                <span className="task-name">{ev.title}</span>
+                <span style={{ fontSize: 14, color: "#8890d8" }}>{ev.time && `${ev.time} `}{ev.venue && `@ ${ev.venue}`}</span>
+                <button className="delete-btn" onClick={() => deleteEvent(ev.id)}>×</button>
+              </div>
+            ))}
+          </div>
+
+          {/* ===== ADD TASK FORM ===== */}
+          <div className="add-section">
+            <div className="add-title">➕ Add Task</div>
+            <div className="form-row">
+              <input
+                className="quest-input"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addTask()}
+                placeholder="Task name"
+              />
+              <input 
+                className="quest-input" 
+                type="date" 
+                value={taskDeadline} 
+                onChange={(e) => setTaskDeadline(e.target.value)} 
+                style={{ maxWidth: 140 }} 
+              />
+              <button className="quest-btn" onClick={addTask}>Add Task</button>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* TODAY */}
-      <div style={S.sec}>
-        <div style={S.sl}>Today — {todayStr}</div>
-        <div style={S.ts}>
-          {!(tasksByDate[todayStr]?.length || eventsByDate[todayStr]?.length) && (
-            <div style={S.msg}>No tasks or events today</div>
-          )}
-          {(tasksByDate[todayStr] || []).map((task) => (
-            <div key={task.id} style={S.er}>
-              <div style={{ ...S.dot, background: sDt(task.status) }} />
-              <span
-                onClick={() => toggleStatus(task)}
-                style={{ ...S.en, textDecoration: task.status === "completed" ? "line-through" : "none", color: task.status === "completed" ? "#aaa" : "#1a1a1a" }}
-              >
-                {task.name}
-              </span>
-              <span style={{ ...S.bdg, background: sBg(task.status), color: sTx(task.status) }}>{task.status}</span>
-              <button style={S.db} onClick={() => deleteTask(task.id)}>×</button>
+          {/* ===== ADD EVENT FORM ===== */}
+          <div className="add-section">
+            <div className="add-title">📅 Add Event</div>
+            <div className="form-row">
+              <input 
+                className="quest-input" 
+                value={eventTitle} 
+                onChange={(e) => setEventTitle(e.target.value)} 
+                onKeyDown={(e) => e.key === "Enter" && addEvent()} 
+                placeholder="Event title" 
+              />
+              <input 
+                className="quest-input" 
+                type="time" 
+                value={eventTime} 
+                onChange={(e) => setEventTime(e.target.value)} 
+                style={{ maxWidth: 100 }} 
+              />
+              <input 
+                className="quest-input" 
+                value={eventVenue} 
+                onChange={(e) => setEventVenue(e.target.value)} 
+                placeholder="Venue" 
+                style={{ maxWidth: 120 }} 
+              />
+              <input 
+                className="quest-input" 
+                type="date" 
+                value={eventDate} 
+                onChange={(e) => setEventDate(e.target.value)} 
+                style={{ maxWidth: 130 }} 
+              />
+              <button className="quest-btn" onClick={addEvent}>Add Event</button>
             </div>
-          ))}
-          {(eventsByDate[todayStr] || []).map((ev) => (
-            <div key={ev.id} style={S.er}>
-              <div style={{ ...S.dot, background: "#378ADD" }} />
-              <span style={S.en}>{ev.title}</span>
-              <span style={S.em}>{ev.time && `${ev.time} `}{ev.venue && `@ ${ev.venue}`}</span>
-              <button style={S.db} onClick={() => deleteEvent(ev.id)}>×</button>
+          </div>
+
+          {/* ===== CALENDAR SECTION ===== */}
+          <div className="add-section">
+            <div className="add-title">📆 {today.toLocaleString("default", { month: "long", year: "numeric" })}</div>
+            <div className="calendar-grid">
+              {/* Day headers */}
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                <div key={d} className="calendar-day-header">{d}</div>
+              ))}
+              {/* Empty cells for days before month starts */}
+              {Array(firstDayWeekday).fill(null).map((_, i) => <div key={`empty-${i}`} />)}
+              {/* Calendar days */}
+              {days.map((day) => {
+                const dateStr = day.toISOString().split("T")[0]; // YYYY-MM-DD
+                const isToday = dateStr === todayStr;
+                return (
+                  <div key={dateStr} className={`calendar-cell ${isToday ? "today" : ""}`}>
+                    <div className="calendar-date">{day.getDate()}</div>
+                    {/* Tasks for this date */}
+                    {(tasksByDate[dateStr] || []).map((task) => (
+                      <div 
+                        key={task.id} 
+                        className="calendar-chip chip-task"
+                        style={{ 
+                          background: sBg(task.status), 
+                          color: sTx(task.status),
+                          cursor: "pointer"
+                        }}
+                        onClick={() => toggleStatus(task)}
+                      >
+                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {task.name}
+                        </span>
+                        <button 
+                          className="chip-delete" 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering parent onClick
+                            deleteTask(task.id);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {/* Events for this date */}
+                    {(eventsByDate[dateStr] || []).map((ev) => (
+                      <div key={ev.id} className="calendar-chip chip-event">
+                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {ev.title}
+                        </span>
+                        <button 
+                          className="chip-delete" 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering parent onClick
+                            deleteEvent(ev.id);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          </div>
         </div>
       </div>
-
-      {/* ADD TASK */}
-      <div style={S.sec}>
-        <div style={S.sl}>Add task</div>
-        <div style={S.ar}>
-          <input
-            style={S.inp}
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addTask()}
-            placeholder="Task name"
-          />
-          <input style={S.inpSm} type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} />
-          <button style={S.btn} onClick={addTask}>+ Add task</button>
-        </div>
-      </div>
-
-      {/* ADD EVENT */}
-      <div style={S.sec}>
-        <div style={S.sl}>Add event</div>
-        <div style={S.ar}>
-          <input style={S.inp} value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addEvent()} placeholder="Event title" />
-          <input style={S.inpSm} type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} />
-          <input style={{ ...S.inpSm, maxWidth: 120 }} value={eventVenue} onChange={(e) => setEventVenue(e.target.value)} placeholder="Venue" />
-          <input style={S.inpSm} type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-          <button style={S.btn} onClick={addEvent}>+ Add event</button>
-        </div>
-      </div>
-
-      {/* CALENDAR */}
-      <div style={S.sec}>
-        <div style={S.sl}>{today.toLocaleString("default", { month: "long", year: "numeric" })}</div>
-        <div style={S.cg}>
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-            <div key={d} style={S.cdh}>{d}</div>
-          ))}
-          {Array(firstDayWeekday).fill(null).map((_, i) => <div key={`e-${i}`} />)}
-          {days.map((day) => {
-            const dateStr = day.toISOString().split("T")[0];
-            const isToday = dateStr === todayStr;
-            return (
-              <div key={dateStr} style={isToday ? S.ccT : S.cc}>
-                <div style={isToday ? S.cdT : S.cd}>{day.getDate()}</div>
-                {(tasksByDate[dateStr] || []).map((task) => (
-                  <div key={task.id} style={{ ...S.chip, background: sBg(task.status), color: sTx(task.status) }}>
-                    <span style={S.chipTxt} title={task.name}>{task.name}</span>
-                    <button style={S.chipDel} onClick={() => deleteTask(task.id)}>×</button>
-                  </div>
-                ))}
-                {(eventsByDate[dateStr] || []).map((ev) => (
-                  <div key={ev.id} style={{ ...S.chip, background: "#E6F1FB", color: "#185FA5" }}>
-                    <span style={S.chipTxt} title={ev.title}>{ev.title}</span>
-                    <button style={{ ...S.chipDel, color: "#185FA5" }} onClick={() => deleteEvent(ev.id)}>×</button>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
     </div>
   );
 }

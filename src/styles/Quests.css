@@ -1,63 +1,300 @@
-/* quests.css */
+@import url('https://fonts.googleapis.com/css2?family=Jersey+15&display=swap');
 
-/* Quest card container */
-.quest-card {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-  background-color: #f9f9f9;
-  box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
-  transition: transform 0.1s ease;
+:root {
+  --quest-accent: #4E56C0;
+  --quest-bg-tint: #f0f2fc;
+  --quest-tab-active: #8890d8;
 }
 
-.quest-card:hover {
-  transform: scale(1.02);
-}
-
-/* Completed quests */
-.quest-card.completed {
-  background-color: #e0f7e9;
-  border-color: #4CAF50;
-}
-
-/* Quest title */
-.quest-card h4 {
-  margin: 0 0 6px 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-/* Quest progress text */
-.quest-card p {
-  margin: 0 0 8px 0;
-  font-size: 0.95rem;
-}
-
-/* Progress bar container */
-.quest-progress {
-  height: 10px;
+.quests-root {
+  font-family: "Jersey 15", serif;
+  font-size: 20px;
+  min-height: 100vh;
   width: 100%;
-  background-color: #eee;
-  border-radius: 5px;
-  overflow: hidden;
-  margin-bottom: 8px;
+  background: linear-gradient(135deg, #f5f7ff 0%, #e8ecf8 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
 }
 
-/* Progress bar fill */
+.quests-card {
+  width: 100%;
+  max-width: 700px;
+  background: white;
+  border: 2.5px solid var(--quest-accent);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(100, 120, 200, 0.12);
+  animation: cardPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cardPop {
+  from { opacity: 0; transform: scale(0.92) translateY(16px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.quests-header {
+  background: var(--quest-tab-active);
+  padding: 14px 20px;
+}
+
+.quests-title {
+  font-size: 28px;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.quests-panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.quests-section-header {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.quest-card {
+  background: var(--quest-bg-tint);
+  border: 2px solid var(--quest-accent);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.quest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.quest-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--quest-accent);
+}
+
+.quest-progress-text {
+  font-size: 16px;
+  color: #8890d8;
+}
+
+.quest-progress-bar {
+  height: 8px;
+  background: rgba(78, 86, 192, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
 .quest-progress-fill {
   height: 100%;
-  background-color: #4CAF50;
-  width: 0%;
+  border-radius: 999px;
   transition: width 0.3s ease;
 }
 
-/* Status text */
-.quest-card span {
-  font-size: 0.9rem;
-  font-weight: 500;
+.today-section {
+  background: var(--quest-bg-tint);
+  border: 2px solid var(--quest-accent);
+  border-radius: 16px;
+  padding: 16px;
 }
 
-.quest-card span.completed {
-  color: #4CAF50;
+.today-header {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--quest-accent);
+  margin-bottom: 12px;
+}
+
+.task-item, .event-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(78, 86, 192, 0.15);
+}
+
+.task-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-uncompleted { background: #E24B4A; }
+.status-in-progress { background: #EF9F27; }
+.status-completed { background: #1D9E75; }
+
+.task-name {
+  flex: 1;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.task-name.completed {
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.status-badge.uncompleted {
+  background: #FCEBEB;
+  color: #A32D2D;
+}
+
+.status-badge.in-progress {
+  background: #FAEEDA;
+  color: #854F0B;
+}
+
+.status-badge.completed {
+  background: #EAF3DE;
+  color: #3B6D11;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #bbb;
+}
+
+.delete-btn:hover {
+  color: #E24B4A;
+}
+
+.add-section {
+  background: var(--quest-bg-tint);
+  border: 2px solid var(--quest-accent);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.add-title {
+  font-size: 18px;
+  color: var(--quest-accent);
+  margin-bottom: 12px;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.quest-input {
+  flex: 1;
+  font-family: "Jersey 15", serif;
+  font-size: 16px;
+  padding: 8px 12px;
+  border: 2px solid var(--quest-accent);
+  border-radius: 12px;
+  background: white;
+}
+
+.quest-input:focus {
+  outline: none;
+  border-color: var(--quest-tab-active);
+}
+
+.quest-btn {
+  font-family: "Jersey 15", serif;
+  font-size: 16px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ADBBFA 0%, #8799ED 100%);
+  color: white;
+  border: 2px solid var(--quest-accent);
+}
+
+.quest-btn:hover {
+  filter: brightness(1.05);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-day-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--quest-accent);
+  text-align: center;
+  padding: 6px;
+}
+
+.calendar-cell {
+  border: 1.5px solid var(--quest-accent);
+  border-radius: 12px;
+  min-height: 90px;
+  padding: 6px;
+  background: white;
+}
+
+.calendar-cell.today {
+  border: 2.5px solid var(--quest-tab-active);
+  background: var(--quest-bg-tint);
+}
+
+.calendar-date {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--quest-accent);
+  margin-bottom: 4px;
+}
+
+.calendar-chip {
+  font-size: 10px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.chip-task {
+  background: var(--quest-bg-tint);
+  border: 1px solid var(--quest-accent);
+}
+
+.chip-event {
+  background: #E6F1FB;
+  border: 1px solid #185FA5;
+  color: #185FA5;
+}
+
+.chip-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #8890d8;
+  font-size: 16px;
 }

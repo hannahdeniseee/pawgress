@@ -60,7 +60,7 @@ function AppContent() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {dbUser && <SelectPet currentUser={dbUser} />}
       </div>
-      <Todo />
+      <Quest />
       {dbUser && <Friends currentUser={dbUser} />}
     </>
   );
