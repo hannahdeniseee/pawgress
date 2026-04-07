@@ -19,7 +19,6 @@ const nxt = (s) => s === "uncompleted" ? "in progress" : s === "in progress" ? "
 const API_BASE = "http://localhost:5000/api";
 const userId = 1;
 
-// Set USE_API = true when your Flask backend is running
 const USE_API = false;
 
 // --- STYLES ---
