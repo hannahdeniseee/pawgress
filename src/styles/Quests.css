@@ -1,0 +1,63 @@
+/* quests.css */
+
+/* Quest card container */
+.quest-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background-color: #f9f9f9;
+  box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
+  transition: transform 0.1s ease;
+}
+
+.quest-card:hover {
+  transform: scale(1.02);
+}
+
+/* Completed quests */
+.quest-card.completed {
+  background-color: #e0f7e9;
+  border-color: #4CAF50;
+}
+
+/* Quest title */
+.quest-card h4 {
+  margin: 0 0 6px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Quest progress text */
+.quest-card p {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+}
+
+/* Progress bar container */
+.quest-progress {
+  height: 10px;
+  width: 100%;
+  background-color: #eee;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+/* Progress bar fill */
+.quest-progress-fill {
+  height: 100%;
+  background-color: #4CAF50;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* Status text */
+.quest-card span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.quest-card span.completed {
+  color: #4CAF50;
+}

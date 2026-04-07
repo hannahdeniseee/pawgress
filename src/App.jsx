@@ -7,10 +7,19 @@ import PetShop from './pages/PetShop.jsx'
 import Todo from "./pages/Todo.jsx";
 import Friends from "./pages/Friends.jsx";
 import Profile from "./pages/Profile.jsx"
+import PetCustomization from './pages/PetCustomization.jsx';
+import Quest from "./pages/Quests.jsx";
 
 function AppContent() {
   const { isLoading, isAuthenticated, user, logout } = useAuth0();
   const [dbUser, setDbUser] = useState(null);
+  const mockTasks = [
+  { id: 1, name: "Task 1", status: "completed", deadline: "2026-04-07" },
+  { id: 2, name: "Task 2", status: "completed", deadline: "2026-04-07" },
+  { id: 3, name: "Task 3", status: "in progress", deadline: "2026-04-07" },
+  { id: 4, name: "Task 4", status: "completed", deadline: "2026-04-06" },
+  { id: 5, name: "Task 5", status: "completed", deadline: "2026-04-05" },
+  ];
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -54,6 +63,10 @@ function AppContent() {
       >
         Logout
       </button>
+
+      <Link to="/shop">Go to Pet Shop</Link>
+      <Link to="/customization">Customize my Pet</Link>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <Profile currentUser={dbUser} />
     </div>

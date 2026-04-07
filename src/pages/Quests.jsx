@@ -11,13 +11,6 @@ const getDaysInMonth = (year, month) => {
   return days;
 };
 
-const toLocalDateStr = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
-
 const sBg = (s) => s === "completed" ? "#EAF3DE" : s === "in progress" ? "#FAEEDA" : "#FCEBEB";
 const sTx = (s) => s === "completed" ? "#3B6D11" : s === "in progress" ? "#854F0B" : "#A32D2D";
 const sDt = (s) => s === "completed" ? "#1D9E75" : s === "in progress" ? "#EF9F27" : "#E24B4A";
@@ -65,7 +58,7 @@ const uid = () => _id++;
 
 export default function TodoCalendarWithQuests() {
   const today = new Date();
-  const todayStr = toLocalDateStr(today);
+  const todayStr = today.toISOString().split("T")[0];
 
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
@@ -265,15 +258,15 @@ export default function TodoCalendarWithQuests() {
           ))}
           {Array(firstDayWeekday).fill(null).map((_, i) => <div key={`e-${i}`} />)}
           {days.map((day) => {
-            const dateStr = toLocalDateStr(day);
+            const dateStr = day.toISOString().split("T")[0];
             const isToday = dateStr === todayStr;
             return (
               <div key={dateStr} style={isToday ? S.ccT : S.cc}>
                 <div style={isToday ? S.cdT : S.cd}>{day.getDate()}</div>
                 {(tasksByDate[dateStr] || []).map((task) => (
-                  <div key={task.id} style={{ ...S.chip, background: sBg(task.status), color: sTx(task.status), cursor: "pointer" }} onClick={() => toggleStatus(task)}>
-                    <span style={S.chipTxt} title={`${task.name} (${task.status})`}>{task.name}</span>
-                    <button style={S.chipDel} onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}>×</button>
+                  <div key={task.id} style={{ ...S.chip, background: sBg(task.status), color: sTx(task.status) }}>
+                    <span style={S.chipTxt} title={task.name}>{task.name}</span>
+                    <button style={S.chipDel} onClick={() => deleteTask(task.id)}>×</button>
                   </div>
                 ))}
                 {(eventsByDate[dateStr] || []).map((ev) => (
