@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import "../styles/PetShop.css";
 
 import pinkBow from "../assets/pink-bow.svg";
 import necktie from "../assets/necktie.svg";
 import glasses from "../assets/glasses.svg";
 import collar from "../assets/collar.svg";
+import coin from "../assets/coin.svg";
+import shopBanner from "../styles/website-assets/shop-banner.png"
 
 const SHOP_ITEMS = [
   { id: 1, name: "Pink Bow", price: 60, image: pinkBow, slot: "head" },
@@ -79,29 +82,22 @@ export default function PetAccessoryShop({ userId }) {
     }
   }
 
-  return (
-    <div className="shop-container">
-      {/* Header */}
+  const navigate = useNavigate();
+
+  return (    
+    <div className="page">
+      <img src={shopBanner} className="shop-banner"></img>
+
+      <button className="back-button" onClick={() => navigate('/')}>◄ Back</button>
+
+      {/* Number of coins */}
       <div className="shop-header">
-        <h2>Pet Shop</h2>
-        <span className="coin-display">💰 {coins} coins</span>
+        <img src={coin} className="coin-img"></img>
+        <span className="coin-display">{coins}</span>
       </div>
 
       {/* Message banner */}
       {message && <div className="shop-message">{message}</div>}
-
-      {/* Tabs */}
-      <div className="shop-tabs">
-        {["shop", "inventory"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={activeTab === tab ? "tab active" : "tab"}
-          >
-            {tab === "shop" ? "Shop" : `Inventory (${inventory.length})`}
-          </button>
-        ))}
-      </div>
 
       {/* SHOP TAB */}
       {activeTab === "shop" && (
@@ -121,7 +117,10 @@ export default function PetAccessoryShop({ userId }) {
 
                 <strong>{item.name}</strong>
 
-                <div className="shop-price">💰 {item.price}</div>
+                <div className="shop-price">
+                  <img src={coin}></img>
+                  {item.price}
+                </div>
 
                 <button
                   onClick={() => buyItem(item)}
@@ -138,7 +137,7 @@ export default function PetAccessoryShop({ userId }) {
 
       {/* INVENTORY TAB */}
       {activeTab === "inventory" && (
-        <div className="inventory-list">
+        <div className="shop-grid">
           {inventory.length === 0 && (
             <p className="inventory-empty">
               Your inventory is empty. Buy something from the shop!
@@ -148,17 +147,20 @@ export default function PetAccessoryShop({ userId }) {
           {inventory.map((itemId) => {
             const item = getItem(itemId);
             return (
-              <div key={itemId} className="inventory-row">
-                <img src={item.image} alt={item.name} className="inventory-image" />
+              <div key={itemId} className="shop-card">
+                <img src={item.image} alt={item.name} className="shop-image" />
                 <div>
-                  <strong>{item.name}</strong>{" "}
-                  <span className="inventory-slot">[{item.slot}]</span>
+                  <strong>{item.name}</strong>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <button className="shop-button" onClick={() => setActiveTab(activeTab === "inventory" ? "shop" : "inventory")}>
+        {activeTab === "inventory" ? "◄ Back to Shop" : "Inventory"}
+      </button>
     </div>
   );
 }

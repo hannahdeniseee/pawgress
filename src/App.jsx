@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+
 import Login from './pages/Login.jsx'
 import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
@@ -13,13 +15,6 @@ import Quest from "./pages/Quests.jsx";
 function AppContent() {
   const { isLoading, isAuthenticated, user, logout } = useAuth0();
   const [dbUser, setDbUser] = useState(null);
-  const mockTasks = [
-  { id: 1, name: "Task 1", status: "completed", deadline: "2026-04-07" },
-  { id: 2, name: "Task 2", status: "completed", deadline: "2026-04-07" },
-  { id: 3, name: "Task 3", status: "in progress", deadline: "2026-04-07" },
-  { id: 4, name: "Task 4", status: "completed", deadline: "2026-04-06" },
-  { id: 5, name: "Task 5", status: "completed", deadline: "2026-04-05" },
-  ];
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -46,21 +41,12 @@ function AppContent() {
 
   const currentUser = dbUser || user;
 
-  return (
+  const HomePage = () => (
     <>
-      <img
-        src={currentUser.picture}
-        alt={currentUser.name}
-        style={{ width: 100, borderRadius: "50%" }}
-      />
+      <img src={currentUser.picture} alt={currentUser.name} style={{ width: 100, borderRadius: "50%" }} />
       <h2>{currentUser.nickname || currentUser.username}</h2>
       <p>{currentUser.email}</p>
-
-      <button
-        onClick={() =>
-          logout({ logoutParams: { returnTo: window.location.origin } })
-        }
-      >
+      <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
         Logout
       </button>
 
@@ -68,17 +54,25 @@ function AppContent() {
       <Link to="/customization">Customize my Pet</Link>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <Profile currentUser={dbUser} />
-    </div>
-      
+        <Profile currentUser={dbUser} />
+      </div>
       <PomodoroTimer user={currentUser} />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {dbUser && <SelectPet currentUser={dbUser} />}
       </div>
-      {dbUser && <PetShop userId={dbUser.id} />}
       <Todo />
       {dbUser && <Friends currentUser={dbUser} />}
     </>
+  );
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div>Loading...</div>} />
+        <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div>Loading...</div>} />
+      </Routes>
+    </Router>
   );
 }
 

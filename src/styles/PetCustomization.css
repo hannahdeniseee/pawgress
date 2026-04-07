@@ -1,0 +1,215 @@
+.customization-page {
+    background-image: url("website-assets/customization-page.png");
+    background-size: cover; 
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Jersey 15", serif;
+    font-size: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    padding: 0 60px;
+}
+
+.back-btn {
+    position: absolute;
+    top: 28px;
+    left: 28px;
+    background: white;
+    border: 2.5px solid #4E56C0;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #4E56C0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background 0.15s;
+    z-index: 10;
+}
+.back-btn:hover { background: #f0f2ff; }
+
+.pet-preview {
+    position: relative;
+    width: 350px;
+    height: 350px;
+    border: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.platform {
+    width: 300px;
+    position: absolute;
+    top: 470px;
+    left: 270px;
+    z-index: 0;
+}
+
+.pet-preview > img {
+    width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(100, 120, 200, 0.2));
+}
+
+.accessory-img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.inventory-picker {
+    background: white;
+    border-radius: 20px;
+    border: 2px solid #4E56C0;
+    padding: 0;
+    width: 500px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(100, 120, 200, 0.12);
+    margin-top: 0;
+}
+
+.filter-tabs {
+    display: flex;
+    background: #8890d8;
+    border-radius: 16px 16px 0 0;
+    padding: 10px 16px;
+    gap: 4px;
+}
+
+.filter-tab {
+    flex: 1;
+    padding: 6px 10px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.filter-tab.active,
+.filter-tab:hover {
+    background: rgba(255,255,255,0.25);
+    text-decoration: underline;
+}
+
+.inventory-picker > div {
+    background: white;
+}
+
+.inventory-item {
+    border: 1.5px solid #dde0f5;
+    border-radius: 14px;
+    padding: 10px 6px;
+    background: #f0f2fc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: auto !important;
+    min-height: 110px;
+    transition: border-color 0.15s, background 0.15s;
+    cursor: pointer;
+}
+
+.inventory-item:hover {
+    border-color: #9ba3e0;
+    background: #e8eafb;
+}
+
+.inventory-item img {
+    width: 52px;
+    height: 52px;
+}
+
+.item-name {
+    font-size: 24px;
+    margin-top: 6px;
+    font-weight: 600;
+    color: #4a52b8;
+    text-align: center;
+}
+
+.item-slot {
+    font-size: 10px;
+    color: #9098cc;
+    text-transform: capitalize;
+}
+
+.inventory-grid {
+    padding: 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: white;
+}
+
+.inventory-picker button {
+    margin-top: 6px;
+    font-size: 18px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1.5px solid #4E56C0;
+    background: white;
+    color: #4a52b8;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.inventory-picker button:hover {
+    background: #8890d8;
+    color: white;
+}
+
+.equipped-slots {
+    display: none;
+}
+
+.shop-message {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #8890d8;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-size: 20px;
+    font-weight: 600;
+    z-index: 20;
+    white-space: nowrap;
+}
+
+.inventory-picker p {
+    padding: 24px 16px;
+    text-align: center;
+    color: #9098cc;
+    font-size: 13px;
+    margin: 0;
+}
+
+.inventory-picker > div::-webkit-scrollbar {
+    width: 6px;
+}
+.inventory-picker > div::-webkit-scrollbar-track {
+    background: #f0f2fc;
+    border-radius: 3px;
+}
+.inventory-picker > div::-webkit-scrollbar-thumb {
+    background: #c0c6ee;
+    border-radius: 3px;
+}
