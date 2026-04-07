@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+15&display=swap');
+
+/* ── Navbar Container ──────────────────────────────────── */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  background: #4E56C0;
+  padding: 10px 20px 0;
+  font-family: "Jersey 15", serif;
+  box-shadow: 0 2px 12px rgba(78, 86, 192, 0.3);
+  animation: navSlideDown 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes navSlideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Tabs ──────────────────────────────────────────────── */
+.navbar-tabs {
+  display: flex;
+  gap: 4px;
+}
+.navbar-tab {
+  padding: 10px 24px;
+  border-radius: 12px 12px 0 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 20px;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  border: 2px solid transparent;
+  border-bottom: none;
+}
+.navbar-tab:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: translateY(-3px);
+}
+.navbar-tab.active {
+  background: white;
+  color: #4E56C0;
+  border-color: #8890d8;
+  border-bottom: none;
+}
+
+/* ── User Section ──────────────────────────────────────── */
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+.navbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+.navbar-username {
+  color: white;
+  font-size: 18px;
+}
+.navbar-logout {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 4px 14px;
+  color: white;
+  font-family: "Jersey 15", serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.navbar-logout:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

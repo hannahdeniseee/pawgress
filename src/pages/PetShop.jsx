@@ -88,7 +88,6 @@ export default function PetAccessoryShop({ userId }) {
     <div className="page">
       <img src={shopBanner} className="shop-banner"></img>
 
-      <button className="back-button" onClick={() => navigate('/')}>◄ Back</button>
 
       {/* Number of coins */}
       <div className="shop-header">

@@ -142,8 +142,6 @@ export default function PetCustomization({ userId }) {
   return (
     <div className="customization-page">
 
-      <Link to="/" className="back-btn">← Back</Link>
-
       {message && <div className="shop-message">{message}</div>}
 
       <img src={platform} className="platform"></img>

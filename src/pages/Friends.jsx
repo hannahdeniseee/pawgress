@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../styles/Friends.css';
 
 function Friends({ currentUser }) {
   const [searchUsername, setSearchUsername] = useState('');
@@ -78,74 +79,101 @@ function Friends({ currentUser }) {
   if (!currentUser?.id) return null;
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: '1rem', margin: '1rem 0' }}>
-      <h2>Friends</h2>
+    <div className="friends-card">
+      <div className="friends-header">Friends</div>
 
-      <div>
-        <h3>Search for a User</h3>
-        <input
-          type="text"
-          value={searchUsername}
-          onChange={(e) => { setSearchUsername(e.target.value); setSearched(false); setSearchResult(null); }}
-          placeholder="Enter username"
-          onKeyDown={(e) => e.key === 'Enter' && searchUser()}
-        />
-        <button onClick={searchUser}>Search</button>
-
-        {searched && !searchResult && <p>No users were found</p>}
-        {searched && searchResult && (
-          <div>
-            {searchResult.id === currentUser.id ? (
-              <p>You're already your own best friend, silly!</p>
-            ) : (
-              <div>
-                <p>{searchResult.username}</p>
-                {sentRequests.includes(searchResult.id) ? (
-                  <p>Friend request sent!</p>
-                ) : (
-                  <button onClick={() => sendRequest(searchResult.id)}>Send Friend Request</button>
-                )}
-              </div>
-            )}
+      <div className="friends-body">
+        {/* Search */}
+        <div>
+          <h3 className="friends-section-title">Search for a User</h3>
+          <div className="friends-search-row">
+            <input
+              className="friends-search-input"
+              type="text"
+              value={searchUsername}
+              onChange={(e) => { setSearchUsername(e.target.value); setSearched(false); setSearchResult(null); }}
+              placeholder="Enter username"
+              onKeyDown={(e) => e.key === 'Enter' && searchUser()}
+            />
+            <button className="friends-btn primary" onClick={searchUser}>Search</button>
           </div>
-        )}
-      </div>
 
-      <div>
-        <h3>Pending Friend Requests</h3>
-        {pendingRequests.length === 0 && <p>No pending requests.</p>}
-        {pendingRequests.map(req => (
-          <div key={req.id}>
-            <span>{req.requester.username} wants to be your friend</span>
-            <button onClick={() => respondToRequest(req.id, 'ACCEPTED')}>Accept</button>
-            <button onClick={() => respondToRequest(req.id, 'DECLINED')}>Decline</button>
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <h3>Friends</h3>
-        {friends.length === 0 && <p>No friends yet.</p>}
-        {friends.map(f => {
-          const friendUser = f.requesterId === currentUser.id ? f.receiver : f.requester;
-          return (
-            <div key={f.id}>
-              <span>{friendUser.username}</span>
-              <button onClick={() => viewProfile(friendUser.id)}>View Profile</button>
+          {searched && !searchResult && <p className="friends-no-result">No users were found</p>}
+          {searched && searchResult && (
+            <div className="friends-search-result">
+              {searchResult.id === currentUser.id ? (
+                <p>You're already your own best friend, silly!</p>
+              ) : (
+                <>
+                  <span className="friends-row-name">{searchResult.username}</span>
+                  {sentRequests.includes(searchResult.id) ? (
+                    <span className="friends-sent-msg">Friend request sent!</span>
+                  ) : (
+                    <button className="friends-btn primary" onClick={() => sendRequest(searchResult.id)}>Send Friend Request</button>
+                  )}
+                </>
+              )}
             </div>
-          );
-        })}
+          )}
+        </div>
+
+        <hr className="friends-divider" />
+
+        {/* Pending Requests */}
+        <div>
+          <h3 className="friends-section-title">Pending Friend Requests</h3>
+          <div className="friends-list">
+            {pendingRequests.length === 0 && <p className="friends-empty">No pending requests.</p>}
+            {pendingRequests.map(req => (
+              <div key={req.id} className="friends-row">
+                <span className="friends-row-msg">{req.requester.username} wants to be your friend</span>
+                <div className="friends-row-actions">
+                  <button className="friends-btn accept" onClick={() => respondToRequest(req.id, 'ACCEPTED')}>Accept</button>
+                  <button className="friends-btn decline" onClick={() => respondToRequest(req.id, 'DECLINED')}>Decline</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <hr className="friends-divider" />
+
+        {/* Friends List */}
+        <div>
+          <h3 className="friends-section-title">Friends</h3>
+          <div className="friends-list">
+            {friends.length === 0 && <p className="friends-empty">No friends yet.</p>}
+            {friends.map(f => {
+              const friendUser = f.requesterId === currentUser.id ? f.receiver : f.requester;
+              return (
+                <div key={f.id} className="friends-row">
+                  <span className="friends-row-name">{friendUser.username}</span>
+                  <button className="friends-btn ghost" onClick={() => viewProfile(friendUser.id)}>View Profile</button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
+      {/* Profile Modal */}
       {selectedFriend && (
-        <div style={{ border: '1px solid #aaa', padding: '1rem', marginTop: '1rem' }}>
-          <h3>{selectedFriend.username}&apos;s Profile</h3>
-          {selectedFriend.avatarUrl && (
-            <img src={selectedFriend.avatarUrl} alt={selectedFriend.username} width={60} style={{ borderRadius: '50%' }} />
-          )}
-          <p>Coins: {selectedFriend.coins}</p>
-          <p>Member since: {new Date(selectedFriend.createdAt).toLocaleDateString()}</p>
-          <button onClick={() => setSelectedFriend(null)}>Close</button>
+        <div className="friends-overlay" onClick={() => setSelectedFriend(null)}>
+          <div className="friends-modal" onClick={e => e.stopPropagation()}>
+            <div className="friends-modal-header">
+              <span>{selectedFriend.username}&apos;s Profile</span>
+              <button className="friends-modal-close" onClick={() => setSelectedFriend(null)}>✕</button>
+            </div>
+            <div className="friends-modal-body">
+              {selectedFriend.avatarUrl && (
+                <img className="friends-modal-avatar" src={selectedFriend.avatarUrl} alt={selectedFriend.username} />
+              )}
+              <p className="friends-modal-stat">{selectedFriend.username}</p>
+              <p className="friends-modal-stat">🪙 {selectedFriend.coins} coins</p>
+              <p className="friends-modal-stat-label">Member since {new Date(selectedFriend.createdAt).toLocaleDateString()}</p>
+              <button className="friends-btn ghost" onClick={() => setSelectedFriend(null)}>Close</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

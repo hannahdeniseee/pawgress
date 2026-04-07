@@ -80,34 +80,6 @@ function chime(type = "focus") {
   });
 }
 
-// Retro OS window title bar
-function TitleBar({ title, onSettings }) {
-  return (
-    <div className="title-bar">
-      <div className="title-bar-left">
-        <span className="title-bar-icon">🍅</span>
-        <span className="title-bar-text">{title}</span>
-      </div>
-      <div className="title-bar-buttons">
-        <button className="tb-btn tb-minimize" >_</button>
-        <button className="tb-btn tb-maximize" >□</button>
-        <button className="tb-btn tb-close" title="Settings" onClick={onSettings}>⚙</button>
-      </div>
-    </div>
-  );
-}
-
-// Pixel star decoration
-function Stars() {
-  return (
-    <div className="bg-stars" aria-hidden="true">
-      {[...Array(12)].map((_, i) => (
-        <span key={i} className={`star star-${i}`}>✦</span>
-      ))}
-    </div>
-  );
-}
-
 export default function PomodoroTimer({ user }) {
   const [mode, setMode] = useState("focus");
   const [running, setRunning] = useState(false);
@@ -229,9 +201,9 @@ export default function PomodoroTimer({ user }) {
   const dashOffset = circumference * (1 - progress);
 
   const modeColors = {
-    focus:  { accent: "#b388ff", bg: "#ede7ff", tab: "#d4baff" },
-    short:  { accent: "#81d4fa", bg: "#e1f5fe", tab: "#b3e5fc" },
-    long:   { accent: "#f48fb1", bg: "#fce4ec", tab: "#f8bbd0" },
+    focus:  { accent: "#4E56C0", bg: "#f0f2fc", tab: "#8890d8" },
+    short:  { accent: "#56A0C0", bg: "#EDF6FC", tab: "#88B8D8" },
+    long:   { accent: "#8B56C0", bg: "#F2EEFC", tab: "#B088D8" },
   };
   const col = modeColors[mode];
 
@@ -239,97 +211,96 @@ export default function PomodoroTimer({ user }) {
 
   return (
     <div className="pomo-root" style={{ "--accent": col.accent, "--bg-tint": col.bg, "--tab-active": col.tab }}>
-      {/* Main Window */}
-      <div className="os-window">
-        <TitleBar
-          title="Pawmodoro Timer v1.0"
-          onSettings={() => { setShowSettings(true); setPendingFocus(focusMins); setPendingShort(shortMins); setPendingLong(longMins); }}
-        />
+      {/* Main Card */}
+      <div className="pomo-card">
+        {/* Header */}
+        <div className="pomo-header">
+          <span className="pomo-title">🍅 Pawmodoro Timer</span>
+          <button
+            className="pomo-settings-btn"
+            onClick={() => { setShowSettings(true); setPendingFocus(focusMins); setPendingShort(shortMins); setPendingLong(longMins); }}
+          >
+            ⚙ Settings
+          </button>
+        </div>
 
-        {/* Window body */}
-        <div className="window-body">
+        {/* Mode tabs */}
+        <div className="pomo-tabs">
+          {["focus", "short", "long"].map((m) => (
+            <button
+              key={m}
+              className={`pomo-tab ${mode === m ? "active" : ""}`}
+              onClick={() => switchMode(m)}
+            >
+              {m === "focus" ? "Lock In" : m === "short" ? "Short Break" : "Long Break"}
+            </button>
+          ))}
+        </div>
 
-          {/* Mode tabs... styled like OS tab bar */}
-          <div className="tab-bar">
-            {["focus", "short", "long"].map((m) => (
-              <button
-                key={m}
-                className={`os-tab ${mode === m ? "active" : ""}`}
-                onClick={() => switchMode(m)}
-              >
-                {m === "focus" ? "Lock In" : m === "short" ? "Short Break" : "Long Break"}
-              </button>
-            ))}
+        {/* Timer panel */}
+        <div className="timer-panel" style={{ background: col.bg }}>
+
+          {/* Sessions badge */}
+          <div className="sessions-badge">
+            <span>🔥</span>
+            <span>{sessionsToday} sessions today</span>
           </div>
 
-          {/* Timer panel */}
-          <div className="timer-panel" style={{ background: col.bg }}>
+          {/* Big tomato + ring */}
+          <div className="ring-wrap">
+            <svg className="ring-svg" viewBox="0 0 260 260">
+              {/* Dotted track */}
+              <circle cx="130" cy="130" r={radius} className="ring-track" />
+              {/* Progress arc */}
+              <circle
+                cx="130" cy="130" r={radius}
+                className="ring-progress"
+                style={{
+                  strokeDasharray: circumference,
+                  strokeDashoffset: dashOffset,
+                  stroke: col.accent,
+                }}
+              />
+            </svg>
 
-            {/* Sessions badge */}
-            <div className="sessions-badge">
-              <span>🔥</span>
-              <span>{sessionsToday} sessions today</span>
-            </div>
-
-            {/* Big tomato + ring */}
-            <div className="ring-wrap">
-              <svg className="ring-svg" viewBox="0 0 260 260">
-                {/* Dotted track */}
-                <circle cx="130" cy="130" r={radius} className="ring-track" />
-                {/* Progress arc */}
-                <circle
-                  cx="130" cy="130" r={radius}
-                  className="ring-progress"
-                  style={{
-                    strokeDasharray: circumference,
-                    strokeDashoffset: dashOffset,
-                    stroke: col.accent,
-                  }}
-                />
-              </svg>
-
-              <div className="ring-center">
-                <div className={`tomato-emoji ${tomatoBounce ? "bounce" : ""} ${running ? "wiggle" : ""}`}>
-                  🍅
-                </div>
-                <div className="timer-digits">{formatTime(secondsLeft)}</div>
-                <div className="mode-label">{modeLabel}</div>
+            <div className="ring-center">
+              <div className={`tomato-emoji ${tomatoBounce ? "bounce" : ""} ${running ? "wiggle" : ""}`}>
+                🍅
               </div>
+              <div className="timer-digits">{formatTime(secondsLeft)}</div>
+              <div className="mode-label">{modeLabel}</div>
             </div>
-
-            {/* Reward preview */}
-            {mode === "focus" && (
-              <div className="reward-preview">
-                You recieve: <span className="rp-pill">+{calcRewards(focusMins).coins} 🪙</span> <span className="rp-pill">+{calcRewards(focusMins).xp} ✨</span>
-              </div>
-            )}
-
-            {/* Controls */}
-            <div className="controls">
-              <button className="os-btn primary" onClick={handleStartPause}>
-                {running ? "⏸ Pause" : secondsLeft < total ? "▶ Resume Timer" : "▶ Start Timer"}
-              </button>
-              <button className="os-btn ghost" onClick={handleCancel}>
-                ✕ Cancel
-              </button>
-            </div>
-
-          </div>{/* /timer-panel */}
-
-          {/* Status bar */}
-          <div className="status-bar">
-            <span>★ Pawgress App</span>
-            <span>focus: {focusMins}m · short: {shortMins}m · long: {longMins}m</span>
           </div>
-        </div>{/* /window-body */}
-      </div>{/* /os-window */}
 
-      {/* Completion notification... floats above window */}
+          {/* Reward preview */}
+          {mode === "focus" && (
+            <div className="reward-preview">
+              You recieve: <span className="rp-pill">+{calcRewards(focusMins).coins} 🪙</span> <span className="rp-pill">+{calcRewards(focusMins).xp} ✨</span>
+            </div>
+          )}
+
+          {/* Controls */}
+          <div className="controls">
+            <button className="pomo-btn primary" onClick={handleStartPause}>
+              {running ? "⏸ Pause" : secondsLeft < total ? "▶ Resume Timer" : "▶ Start Timer"}
+            </button>
+            <button className="pomo-btn ghost" onClick={handleCancel}>
+              ✕ Cancel
+            </button>
+          </div>
+
+        </div>{/* /timer-panel */}
+      </div>{/* /pomo-card */}
+
+      {/* Completion notification */}
       {notification && (
-        <div className="notif-overlay">
-          <div className={`notif-window ${notification.type}`}>
-            <TitleBar title={notification.type === "focus" ? "Congrats!" : "It's time to lock in!"} onSettings={() => setNotification(null)} />
-            <div className="notif-body">
+        <div className="pomo-overlay">
+          <div className={`pomo-modal ${notification.type}`}>
+            <div className="pomo-modal-header">
+              <span>{notification.type === "focus" ? "Congrats!" : "It's time to lock in!"}</span>
+              <button className="pomo-modal-close" onClick={() => setNotification(null)}>✕</button>
+            </div>
+            <div className="pomo-modal-body">
               <div className="notif-emoji">
                 {notification.type === "focus" ? "🎉" : "🐾"}
               </div>
@@ -342,16 +313,16 @@ export default function PomodoroTimer({ user }) {
                   </div>
                   <p className="notif-sub">Time to take a break!</p>
                   <div className="notif-actions">
-                    <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("short"); }}>Short Break</button>
-                    <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("long"); }}>Long Break</button>
-                    <button className="os-btn ghost" onClick={() => { setNotification(null); handleCancel(); }}>Skip</button>
+                    <button className="pomo-btn primary" onClick={() => { setNotification(null); switchMode("short"); }}>Short Break</button>
+                    <button className="pomo-btn primary" onClick={() => { setNotification(null); switchMode("long"); }}>Long Break</button>
+                    <button className="pomo-btn ghost" onClick={() => { setNotification(null); handleCancel(); }}>Skip</button>
                   </div>
                 </>
               ) : (
                 <>
                   <p className="notif-msg">Ready to focus again?</p>
                   <div className="notif-actions">
-                    <button className="os-btn primary" onClick={() => { setNotification(null); switchMode("focus"); }}>Start Focus</button>
+                    <button className="pomo-btn primary" onClick={() => { setNotification(null); switchMode("focus"); }}>Start Focus</button>
                   </div>
                 </>
               )}
@@ -362,10 +333,13 @@ export default function PomodoroTimer({ user }) {
 
       {/* Settings modal */}
       {showSettings && (
-        <div className="notif-overlay" onClick={() => setShowSettings(false)}>
-          <div className="notif-window settings" onClick={e => e.stopPropagation()}>
-            <TitleBar title="Settings ⚙" onSettings={() => setShowSettings(false)} />
-            <div className="notif-body">
+        <div className="pomo-overlay" onClick={() => setShowSettings(false)}>
+          <div className="pomo-modal settings" onClick={e => e.stopPropagation()}>
+            <div className="pomo-modal-header">
+              <span>⚙ Settings</span>
+              <button className="pomo-modal-close" onClick={() => setShowSettings(false)}>✕</button>
+            </div>
+            <div className="pomo-modal-body">
               {[
                 { label: "Focus Duration", value: pendingFocus, set: setPendingFocus, min: 1, max: 90 },
                 { label: "Short Break", value: pendingShort, set: setPendingShort, min: 1, max: 30 },
@@ -388,8 +362,8 @@ export default function PomodoroTimer({ user }) {
                 </div>
               ))}
               <div className="notif-actions" style={{ marginTop: "16px" }}>
-                <button className="os-btn primary" onClick={saveSettings}>💾 Save</button>
-                <button className="os-btn ghost" onClick={() => setShowSettings(false)}>Cancel</button>
+                <button className="pomo-btn primary" onClick={saveSettings}>💾 Save</button>
+                <button className="pomo-btn ghost" onClick={() => setShowSettings(false)}>Cancel</button>
               </div>
             </div>
           </div>
