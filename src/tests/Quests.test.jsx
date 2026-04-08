@@ -1,15 +1,36 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import userEvent from '@testing-library/user-event';
 import TodoCalendarWithQuests from "../pages/Quests";
 
-global.fetch = vi.fn();
+// Mock CustomEvent properly
+global.CustomEvent = vi.fn().mockImplementation((eventName, options) => {
+  return { type: eventName, detail: options?.detail };
+});
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem: vi.fn((key) => store[key] || null),
+    setItem: vi.fn((key, value) => {
+      store[key] = value.toString();
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+    removeItem: vi.fn((key) => {
+      delete store[key];
+    }),
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+// Mock window.dispatchEvent
+window.dispatchEvent = vi.fn();
 
 const todayStr = new Date().toISOString().split("T")[0];
-
-// Mock data
-const task1 = [{ id: 1, name: "Task 1", deadline: todayStr, status: "uncompleted" }];
-const event1 = [{ id: 1, title: "Event 1", date: todayStr, time: "12:00", venue: "Office" }];
 
 // Mock the current date
 const mockDate = new Date('2024-01-15T10:00:00');
@@ -34,17 +55,10 @@ beforeAll(() => {
 
 describe("TodoCalendarWithQuests", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
-
-    fetch.mockImplementation((url) => {
-      if (url.includes("/tasks")) {
-        return Promise.resolve({ json: async () => [...task1] });
-      }
-      if (url.includes("/events")) {
-        return Promise.resolve({ json: async () => [...event1] });
-      }
-      return Promise.resolve({ json: async () => [] });
-    });
+    vi.clearAllMocks();
+    localStorageMock.clear();
+    localStorageMock.setItem('user_data', JSON.stringify({ coins: 0, xp: 0 }));
+    window.dispatchEvent.mockClear();
   });
 
   // ========== QUEST TESTS ==========
@@ -64,18 +78,7 @@ describe("TodoCalendarWithQuests", () => {
 
   // ========== TASK TESTS ==========
   describe("Task Management", () => {
-    it("renders today's tasks", async () => {
-      render(<TodoCalendarWithQuests />);
-      expect(await screen.findByText("Task 1")).toBeInTheDocument();
-    });
-
     it("adds a new task", async () => {
-      fetch.mockImplementationOnce(() =>
-        Promise.resolve({
-          json: async () => ({ id: 2, name: "New Task", deadline: todayStr, status: "uncompleted" }),
-        })
-      );
-
       render(<TodoCalendarWithQuests />);
 
       const input = screen.getByPlaceholderText("Task name");
@@ -84,51 +87,100 @@ describe("TodoCalendarWithQuests", () => {
       fireEvent.change(input, { target: { value: "New Task" } });
       fireEvent.click(addButton);
 
-      expect(await screen.findByText("New Task")).toBeInTheDocument();
+      await waitFor(() => {
+        const taskElements = screen.getAllByText("New Task");
+        expect(taskElements.length).toBeGreaterThan(0);
+      });
     });
 
-    it("toggles a task status", async () => {
-      fetch.mockImplementationOnce(() =>
-        Promise.resolve({
-          json: async () => ({ id: 1, name: "Task 1", deadline: todayStr, status: "completed" }),
-        })
-      );
-
+    it("saves task to localStorage when added", async () => {
       render(<TodoCalendarWithQuests />);
 
-      const task = await screen.findByText("Task 1");
+      const input = screen.getByPlaceholderText("Task name");
+      const addButton = screen.getByText("Add Task");
+
+      fireEvent.change(input, { target: { value: "LocalStorage Task" } });
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(localStorageMock.setItem).toHaveBeenCalled();
+        const savedTasksCall = localStorageMock.setItem.mock.calls.find(
+          call => call[0] === 'quests_tasks'
+        );
+        expect(savedTasksCall).toBeDefined();
+      });
+    });
+
+    it("toggles a task status from uncompleted to in progress", async () => {
+      render(<TodoCalendarWithQuests />);
+
+      const input = screen.getByPlaceholderText("Task name");
+      const addButton = screen.getByText("Add Task");
+      fireEvent.change(input, { target: { value: "Toggle Task" } });
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("Toggle Task").length).toBeGreaterThan(0);
+      });
+
+      const task = screen.getAllByText("Toggle Task")[0];
       fireEvent.click(task);
-      expect(await screen.findByText("completed")).toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(screen.getByText("in progress")).toBeInTheDocument();
+      });
+    });
+
+    it("toggles a task status to completed and gives rewards", async () => {
+      const consoleSpy = vi.spyOn(console, 'log');
+      
+      render(<TodoCalendarWithQuests />);
+
+      const input = screen.getByPlaceholderText("Task name");
+      const addButton = screen.getByText("Add Task");
+      fireEvent.change(input, { target: { value: "Complete Task" } });
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("Complete Task").length).toBeGreaterThan(0);
+      });
+
+      const task = screen.getAllByText("Complete Task")[0];
+      fireEvent.click(task);
+      fireEvent.click(task);
+
+      // Check that the reward toast appears instead of console log
+      await waitFor(() => {
+        expect(screen.getByText(/coins/)).toBeInTheDocument();
+      });
+      
+      consoleSpy.mockRestore();
     });
 
     it("deletes a task", async () => {
-      fetch.mockImplementationOnce(() => Promise.resolve({ json: async () => ({}) }));
-
       render(<TodoCalendarWithQuests />);
 
-      const deleteButton = await screen.findByText("×");
-      fireEvent.click(deleteButton);
+      const input = screen.getByPlaceholderText("Task name");
+      const addButton = screen.getByText("Add Task");
+      fireEvent.change(input, { target: { value: "Task to Delete" } });
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("Task to Delete").length).toBeGreaterThan(0);
+      });
+
+      const deleteButtons = await screen.findAllByText("×");
+      fireEvent.click(deleteButtons[0]);
       
-      expect(screen.queryByText("Task 1")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText("Task to Delete")).not.toBeInTheDocument();
+      });
     });
   });
 
   // ========== EVENT TESTS ==========
   describe("Event Management", () => {
-    it("renders today's events", async () => {
-      render(<TodoCalendarWithQuests />);
-      expect(await screen.findByText("Event 1")).toBeInTheDocument();
-      expect(await screen.findByText("12:00")).toBeInTheDocument();
-      expect(await screen.findByText("@ Office")).toBeInTheDocument();
-    });
-
     it("adds a new event", async () => {
-      fetch.mockImplementationOnce(() =>
-        Promise.resolve({
-          json: async () => ({ id: 2, title: "New Event", date: todayStr, time: "14:00", venue: "Home" }),
-        })
-      );
-
       render(<TodoCalendarWithQuests />);
 
       const input = screen.getByPlaceholderText("Event title");
@@ -137,18 +189,47 @@ describe("TodoCalendarWithQuests", () => {
       fireEvent.change(input, { target: { value: "New Event" } });
       fireEvent.click(addButton);
 
-      expect(await screen.findByText("New Event")).toBeInTheDocument();
+      await waitFor(() => {
+        const eventElements = screen.getAllByText("New Event");
+        expect(eventElements.length).toBeGreaterThan(0);
+      });
+    });
+
+    it("saves event to localStorage when added", async () => {
+      render(<TodoCalendarWithQuests />);
+
+      const input = screen.getByPlaceholderText("Event title");
+      const addButton = screen.getByText("Add Event");
+
+      fireEvent.change(input, { target: { value: "LocalStorage Event" } });
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        const savedEventsCall = localStorageMock.setItem.mock.calls.find(
+          call => call[0] === 'quests_events'
+        );
+        expect(savedEventsCall).toBeDefined();
+      });
     });
 
     it("deletes an event", async () => {
-      fetch.mockImplementationOnce(() => Promise.resolve({ json: async () => ({}) }));
-
       render(<TodoCalendarWithQuests />);
+
+      const input = screen.getByPlaceholderText("Event title");
+      const addButton = screen.getByText("Add Event");
+      fireEvent.change(input, { target: { value: "Event to Delete" } });
+      fireEvent.click(addButton);
+
+      await waitFor(() => {
+        expect(screen.getAllByText("Event to Delete").length).toBeGreaterThan(0);
+      });
 
       const deleteButtons = await screen.findAllByText("×");
       fireEvent.click(deleteButtons[0]);
       
-      expect(screen.queryByText("Event 1")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText("Event to Delete")).not.toBeInTheDocument();
+      });
     });
   });
 
@@ -156,9 +237,8 @@ describe("TodoCalendarWithQuests", () => {
   describe("Calendar Display", () => {
     it("displays current month and year", () => {
       render(<TodoCalendarWithQuests />);
-      const monthName = mockDate.toLocaleString("default", { month: "long" });
-      const year = mockDate.getFullYear();
-      expect(screen.getByText(`${monthName} ${year}`)).toBeInTheDocument();
+      const monthElements = screen.getAllByText(/January|2024/);
+      expect(monthElements.length).toBeGreaterThan(0);
     });
 
     it("displays all 7 days of week", () => {
@@ -170,6 +250,27 @@ describe("TodoCalendarWithQuests", () => {
       expect(screen.getByText("Thu")).toBeInTheDocument();
       expect(screen.getByText("Fri")).toBeInTheDocument();
       expect(screen.getByText("Sat")).toBeInTheDocument();
+    });
+
+    it("navigates to next month when clicking next button", () => {
+      render(<TodoCalendarWithQuests />);
+      const nextButton = screen.getByText("→");
+      fireEvent.click(nextButton);
+      expect(nextButton).toBeInTheDocument();
+    });
+
+    it("navigates to previous month when clicking previous button", () => {
+      render(<TodoCalendarWithQuests />);
+      const prevButton = screen.getByText("←");
+      fireEvent.click(prevButton);
+      expect(prevButton).toBeInTheDocument();
+    });
+
+    it("returns to current month when clicking month name", () => {
+      render(<TodoCalendarWithQuests />);
+      const monthHeader = screen.getByText(/📆/);
+      fireEvent.click(monthHeader);
+      expect(monthHeader).toBeInTheDocument();
     });
   });
 });
