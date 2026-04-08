@@ -14,15 +14,9 @@ const adapter = new PrismaMariaDb({
   database: "pawgress",
 });
 
-export let prisma = new PrismaClient({ adapter });
+const prismaClient = new PrismaClient({ adapter });
 
-if (process.env.NODE_ENV == "test") {
-  prisma = {
-    pet: {
-      create: async () => {},
-    },
-  };
-}
+export let prisma = prismaClient;
 
 export const app = express();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
@@ -340,6 +334,11 @@ app.delete("/api/tasks/:id", async (req, res) => {
 // Create a new event
 app.post("/api/users/:id/events", async (req, res) => {
   const { title, date, time, venue } = req.body;
+
+  if (!title || !date) {
+    return res.status(400).json({ error: "Title and date are required" });
+  }
+
   try {
     const event = await prisma.event.create({
       data: {

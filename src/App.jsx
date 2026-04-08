@@ -10,6 +10,7 @@ import Todo from "./pages/Todo.jsx";
 import Social from "./pages/Social.jsx";
 import PetCustomization from './pages/PetCustomization.jsx';
 import Navbar from './pages/Navbar.jsx';
+import StudyPlanner from './pages/StudyPlanner.jsx';
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -47,6 +48,7 @@ function AppContent() {
         {dbUser && <SelectPet currentUser={dbUser} />}
       </div>
       <Todo />
+      {dbUser && <StudyPlanner userId={dbUser.id} />}
     </>
   );
 
