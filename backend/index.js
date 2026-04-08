@@ -135,11 +135,37 @@ app.get("/api/users/:id", async (req, res) => {
     res.json({
       ...user,
       equipped: equippedMap,
-      petImage: user.pet[0]?.image || null,  // ← this is what the frontend reads
+      petImage: user.pet[0]?.image || null,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Get task statistics for a user
+app.get("/api/users/:id/tasks/stats", async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    
+    const tasks = await prisma.task.findMany({
+      where: { userId },
+    });
+    
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.status === "completed").length;
+    const inProgressTasks = tasks.filter(t => t.status === "in progress").length;
+    const uncompletedTasks = tasks.filter(t => t.status === "uncompleted").length;
+    
+    res.json({
+      total: totalTasks,
+      completed: completedTasks,
+      inProgress: inProgressTasks,
+      uncompleted: uncompletedTasks
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Task stats error" });
   }
 });
 

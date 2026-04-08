@@ -6,11 +6,12 @@ import Login from './pages/Login.jsx'
 import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
 import PetShop from './pages/PetShop.jsx'
-import Todo from "./pages/Todo.jsx";
 import Social from "./pages/Social.jsx";
 import PetCustomization from './pages/PetCustomization.jsx';
 import Navbar from './pages/Navbar.jsx';
 import Quest from "./pages/Quests.jsx";
+import Friends from "./pages/Friends.jsx";
+import Profile from './pages/Profile.jsx';  // ← ADD THIS IMPORT
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -42,14 +43,16 @@ function AppContent() {
   const currentUser = dbUser || user;
 
   const HomePage = () => (
-    <>
+    <div style={{ width: '100%', margin: 0, padding: 0 }}>
       <PomodoroTimer user={currentUser} />
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      
+      {/* SelectPet component - it should already have "My Companion" inside it */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         {dbUser && <SelectPet currentUser={dbUser} />}
       </div>
+      
       <Quest />
-      {dbUser && <Friends currentUser={dbUser} />}
-    </>
+    </div>
   );
 
   return (
@@ -57,9 +60,9 @@ function AppContent() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div>Loading...</div>} />
-        <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div>Loading...</div>} />
-        <Route path="/profile" element={dbUser ? <Social currentUser={dbUser} /> : <div>Loading...</div>} />
+        <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
+        <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
+        <Route path="/profile" element={dbUser ? <Profile currentUser={dbUser} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />  {/* ← CHANGED from Social to Profile */}
       </Routes>
     </Router>
   );
@@ -77,4 +80,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
