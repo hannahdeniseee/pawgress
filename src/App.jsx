@@ -6,12 +6,11 @@ import Login from './pages/Login.jsx'
 import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
 import PetShop from './pages/PetShop.jsx'
-import Social from "./pages/Social.jsx";
 import PetCustomization from './pages/PetCustomization.jsx';
 import Navbar from './pages/Navbar.jsx';
 import Quest from "./pages/Quests.jsx";
-import Friends from "./pages/Friends.jsx";
 import Profile from './pages/Profile.jsx';  // ← ADD THIS IMPORT
+import StudyPlanner from './pages/StudyPlanner.jsx';
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -52,6 +51,7 @@ function AppContent() {
       </div>
       
       <Quest />
+      {dbUser && <StudyPlanner userId={dbUser.id} />}
     </div>
   );
 
