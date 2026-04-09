@@ -55,8 +55,8 @@
 .platform {
     width: 300px;
     position: absolute;
-    top: 470px;
-    left: 270px;
+    top: 73%;
+    left: 19%;
     z-index: 0;
 }
 
