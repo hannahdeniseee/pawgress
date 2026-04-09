@@ -82,8 +82,8 @@ app.post('/api/pets/add', async (req, res) => {
   }
 });
 
-// app.listen(process.env.PORT, () => {
-//   console.log(`Backend running on port ${process.env.PORT}`);
-// });
+app.listen(process.env.PORT, () => {
+  console.log(`Backend running on port ${process.env.PORT}`);
+});
 
 export default app;
