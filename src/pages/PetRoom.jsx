@@ -1,0 +1,22 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import goldenDogIdle from '../assets/golden-dog-idle.gif';
+import goldenDogActive from '../assets/golden-dog-active.gif';
+import dalmatianDogIdle from '../assets/dalmatian-dog-idle.gif';
+import dalmatianDogActive from '../assets/dalmatian-dog-active.gif';
+import beagleDogIdle from '../assets/beagle-dog-idle.gif';
+import beagleDogActive from '../assets/beagle-dog-active.gif';
+import whiteCatIdle from '../assets/white-cat-idle.gif';
+import whiteCatActive from '../assets/white-cat-active.gif';
+import blackCatIdle from '../assets/black-cat-idle.gif';
+import blackCatActive from '../assets/black-cat-active.gif';
+import orangeCatIdle from '../assets/orange-cat-idle.gif';
+import orangeCatActive from '../assets/orange-cat-active.gif';
+import blueBirdIdle from '../assets/blue-bird-idle.gif';
+import blueBirdActive from '../assets/blue-bird-active.gif';
+import yellowBirdIdle from '../assets/yellow-bird-idle.gif';
+import yellowBirdActive from '../assets/yellow-bird-active.gif';
+import pinkBirdIdle from '../assets/pink-bird-idle.gif';
+import pinkBirdActive from '../assets/pink-bird-active.gif';
+
+import '../styles/PetHouse.css';

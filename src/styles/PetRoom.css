@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+15&display=swap');
+
+:root {
+  --quest-accent: #4E56C0;
+  --quest-bg-tint: #f0f2fc;
+  --quest-tab-active: #8890d8;
+}
+
+.room-root {
+  font-family: "Jersey 15", serif;
+  font-size: 20px;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
