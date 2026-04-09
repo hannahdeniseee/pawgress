@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+15&display=swap');
+
+/* ── Page ──────────────────────────────────────────────── */
+.social-page {
+  background-image: url("website-assets/customization-page.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80px 40px 40px;
+  position: relative;
+  font-family: "Jersey 15", serif;
+  font-size: 20px;
+}
+
+
+/* ── Three-Card Layout ─────────────────────────────────── */
+.social-cards {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  max-width: 1200px;
+  width: 100%;
+}
+.social-cards > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Animations ────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Card ──────────────────────────────────────────────── */
+.social-card {
+  background: white;
+  border: 2.5px solid #4E56C0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(100, 120, 200, 0.12);
+  animation: fadeSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.social-cards > *:nth-child(1) { animation-delay: 0s; }
+.social-cards > *:nth-child(2) { animation-delay: 0.1s; }
+.social-cards > *:nth-child(3) { animation-delay: 0.2s; }
+.social-card-header {
+  background: #8890d8;
+  padding: 14px 20px;
+  font-size: 24px;
+  color: white;
+  letter-spacing: 0.5px;
+}
+.social-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Profile Card ──────────────────────────────────────── */
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2.5px solid #4E56C0;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+.profile-avatar:hover {
+  transform: scale(1.08);
+}
+.profile-name {
+  font-size: 22px;
+  color: #4E56C0;
+  margin: 0;
+}
+.profile-joined {
+  font-size: 16px;
+  color: #8890d8;
+  margin: 0;
+}
+.social-section-title {
+  font-size: 20px;
+  color: #4E56C0;
+  margin: 0;
+}
+.profile-pet-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f0f2fc;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1.5px solid #dde0f5;
+}
+.profile-pet-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+.profile-pet-detail {
+  font-size: 16px;
+  color: #4a52b8;
+  margin: 2px 0;
+}
+
+/* ── Shared ────────────────────────────────────────────── */
+.social-divider {
+  border: none;
+  border-top: 1.5px solid #f0f2fc;
+  margin: 4px 0;
+}
+.social-loading {
+  color: #8890d8;
+  text-align: center;
+}
+.social-empty {
+  color: #8890d8;
+  font-size: 18px;
+}
+
+/* ── Stats Card ────────────────────────────────────────── */
+.stats-chart-wrap {
+  width: 100%;
+  height: 250px;
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import Todo from "./Todo.jsx"; 
+import "../styles/Login.css";
 
 function Login(){
   const {
@@ -11,6 +11,8 @@ function Login(){
     logout: auth0Logout,
     user,
   } = useAuth0();
+
+  const [dbUser, setDbUser] = useState(null);
 
   const signup = () =>
     login({ authorizationParams: { screen_hint: "signup" } });
@@ -26,25 +28,21 @@ function Login(){
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          auth0_id: user.sub,
+          auth0Id: user.sub,
           username: user.nickname || user.name || user.email,
-          avatar_url: user.picture || null,
+          avatarUrl: user.picture || null,
         }),
       })
         .then((res) => res.json())
-        .then((data) => {
-          console.log("User saved to DB:", data);
-        })
-        .catch((err) => {
-          console.error("Error saving user to DB:", err);
-        });
+        .then((data) => setDbUser(data))
+        .catch((err) => console.error("Error saving user:", err));
     }
   }, [isAuthenticated, user]);
 
   if (isLoading) return "Loading...";
 
   return isAuthenticated ? (
-    <>
+    <div className="login-page">
       <img
         src={user.picture}
         alt={user.name}
@@ -54,15 +52,18 @@ function Login(){
       <p><strong>Email:</strong> {user.email}</p>
 
       <button onClick={logout}>Logout</button>
-       <Todo />
-    </>
+      
+    </div>
   ) : (
     <>
       {error && <p>Error: {error.message}</p>}
 
-      <button onClick={signup}>Signup</button>
-
-      <button onClick={login}>Login</button>
+    <div className="login-page">
+      <div class="button-container">
+        <button onClick={signup}>Signup</button>
+        <button onClick={login}>Login</button>
+      </div>
+    </div>
     </>
   );
 }

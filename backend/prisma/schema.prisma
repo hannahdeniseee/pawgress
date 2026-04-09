@@ -1,28 +1,101 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../node_modules/.prisma/client"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
-  id         Int @id @default(autoincrement())
-  auth0Id    String @unique
-  username   String @db.VarChar(50) 
-  avatarUrl  String?
-  createdAt  DateTime @default(now())
-  pet        Pet?   
+  id        Int    @id @default(autoincrement())
+  auth0Id   String @unique
+  username  String @db.VarChar(50)
+  avatarUrl String?
+  coins     Int @default(100)
+  inventory UserAccessory[]
+  createdAt DateTime @default(now())
+
+  sentRequests     Friendship[] @relation("FriendshipRequester")
+  receivedRequests Friendship[] @relation("FriendshipReceiver")
+
+  tasks  Task[]
+  events Event[]
+  pet    Pet[]
+  equipped  EquippedItem[]
+}
+
+model Friendship {
+  id          Int      @id @default(autoincrement())
+  requesterId Int
+  receiverId  Int
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id])
+  receiver  User @relation("FriendshipReceiver", fields: [receiverId], references: [id])
+}
+
+model Accessory {
+  id        Int @id @default(autoincrement())
+  name      String @unique
+  slot      String
+  price     Int
+  users     UserAccessory[]
+}
+
+model UserAccessory {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  accessoryId Int
+  createdAt   DateTime  @default(now())
+  user        User       @relation(fields: [userId], references: [id])
+  accessory   Accessory  @relation(fields: [accessoryId], references: [id])
+
+  @@unique([userId, accessoryId])
+}
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  status    String   @default("uncompleted")
+  deadline  DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Task_userId_fkey")
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  date      DateTime
+  time      String?
+  venue     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Event_userId_fkey")
 }
 
 model Pet {
-  id        Int      @id @default(autoincrement()) @unique
+  id        Int      @id @default(autoincrement())
   userId    Int      @unique
   type      String
   breed     String
   image     String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EquippedItem {
+  id          Int    @id @default(autoincrement())
+  userId      Int
+  slot        String
+  accessoryId Int
+
+  user        User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, slot])
 }
