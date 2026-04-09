@@ -50,7 +50,7 @@ function AppContent() {
         {dbUser && <SelectPet currentUser={dbUser} />}
       </div>
       
-      <Quest />
+      <Quest currentUser={currentUser} />  
       {dbUser && <StudyPlanner userId={dbUser.id} />}
     </div>
   );

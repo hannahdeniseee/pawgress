@@ -481,3 +481,61 @@
   50% { transform: translateX(-50%) scale(1.05); }
   100% { transform: translateX(-50%) scale(1); }
 }
+
+/* View All Button */
+.view-all-btn {
+  background: #4E56C0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  margin-top: 4px;
+  width: 100%;
+  text-align: center;
+}
+
+.view-all-btn:hover {
+  background: #8890d8;
+}
+
+/* Day Modal */
+.day-modal {
+  max-width: 500px;
+  width: 90%;
+}
+
+.day-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+/* Scrollable tasks list in calendar */
+.calendar-tasks-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendar-tasks-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.calendar-tasks-list::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.calendar-tasks-list::-webkit-scrollbar-thumb {
+  background: #8890d8;
+  border-radius: 3px;
+}

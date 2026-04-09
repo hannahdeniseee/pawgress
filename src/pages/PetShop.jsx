@@ -26,16 +26,77 @@ export default function PetAccessoryShop({ userId }) {
   const [activeTab, setActiveTab] = useState("shop");
   const [message, setMessage] = useState("");
 
+  // Load user data - FIRST from localStorage, THEN from backend
+  const loadUser = () => {
+    if (!userId) return;
+    
+    // FIRST: Load from localStorage for immediate display
+    const savedUser = localStorage.getItem("user_data");
+    if (savedUser) {
+      const userData = JSON.parse(savedUser);
+      setCoins(userData.coins || 0);
+      console.log("💰 PetShop loaded from localStorage:", userData.coins);
+    }
+    
+    // THEN: Fetch from backend and sync
+    const fetchFromBackend = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/users/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const backendCoins = data.coins || 0;
+          setCoins(backendCoins);
+          setInventory(data.inventory?.map(a => a.accessoryId) || []);
+          
+          // Sync localStorage with backend
+          const savedUserData = JSON.parse(localStorage.getItem("user_data") || "{}");
+          savedUserData.coins = backendCoins;
+          localStorage.setItem("user_data", JSON.stringify(savedUserData));
+          console.log("✅ PetShop synced with backend:", backendCoins);
+        }
+      } catch (err) {
+        console.error("Failed to load from backend:", err);
+      }
+    };
+    
+    fetchFromBackend();
+  };
+
+  // Listen for coin updates from Quests (real-time)
   useEffect(() => {
-  if (!userId) return;
+    const handleRewardUpdate = (event) => {
+      console.log("💰 PetShop received reward event:", event.detail);
+      if (event.detail && event.detail.coins !== undefined) {
+        setCoins(event.detail.coins);
+        console.log("💰 PetShop updated coins to:", event.detail.coins);
+      }
+    };
+    
+    window.addEventListener('userRewardsUpdated', handleRewardUpdate);
+    
+    return () => {
+      window.removeEventListener('userRewardsUpdated', handleRewardUpdate);
+    };
+  }, []);
 
-  async function loadUser() {
-    const res = await fetch(`http://localhost:5000/api/users/${userId}`);
-    const data = await res.json();
+  // Also listen for localStorage changes (for cross-tab sync)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'user_data' && e.newValue) {
+        const newData = JSON.parse(e.newValue);
+        if (newData && newData.coins !== undefined) {
+          setCoins(newData.coins);
+          console.log("💰 PetShop storage change detected:", newData.coins);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
-    setCoins(data.coins);
-    setInventory(data.inventory.map(a => a.accessoryId) || []);
-  }
+  // Initial load
+  useEffect(() => {
     loadUser();
   }, [userId]);
   
@@ -57,7 +118,7 @@ export default function PetAccessoryShop({ userId }) {
     if (coins < item.price) return showMessage("Not enough coins!");
 
     try {
-      // Deduct coins
+      // Deduct coins from backend
       const coinRes = await fetch(`http://localhost:5000/api/users/${userId}/coins`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -65,19 +126,35 @@ export default function PetAccessoryShop({ userId }) {
       });
 
       const coinData = await coinRes.json();
-      setCoins(coinData.coins);
+      const newCoins = coinData.coins;
+      setCoins(newCoins);
+      
+      // Update localStorage
+      const savedUser = localStorage.getItem("user_data");
+      if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        userData.coins = newCoins;
+        localStorage.setItem("user_data", JSON.stringify(userData));
+      }
+      
+      // Dispatch event for other components
+      window.dispatchEvent(new CustomEvent('userRewardsUpdated', { 
+        detail: { coins: newCoins, xp: 0 }
+      }));
 
       // Add purchased item to inventory
       await fetch(`http://localhost:5000/api/users/${userId}/inventory`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessoryId: item.id }),
-    });
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessoryId: item.id }),
+      });
 
       setInventory((inv) => [...inv, item.id]);
 
       showMessage(`Bought ${item.name}!`);
-    } catch {
+      console.log(`🛒 Purchased ${item.name}. New balance: ${newCoins}`);
+    } catch (err) {
+      console.error("Purchase error:", err);
       showMessage("Network error, try again.");
     }
   }
@@ -86,12 +163,11 @@ export default function PetAccessoryShop({ userId }) {
 
   return (    
     <div className="page">
-      <img src={shopBanner} className="shop-banner"></img>
-
+      <img src={shopBanner} className="shop-banner" alt="Shop Banner" />
 
       {/* Number of coins */}
       <div className="shop-header">
-        <img src={coin} className="coin-img"></img>
+        <img src={coin} className="coin-img" alt="Coin" />
         <span className="coin-display">{coins}</span>
       </div>
 
@@ -117,7 +193,7 @@ export default function PetAccessoryShop({ userId }) {
                 <strong>{item.name}</strong>
 
                 <div className="shop-price">
-                  <img src={coin}></img>
+                  <img src={coin} alt="Coin" />
                   {item.price}
                 </div>
 
@@ -157,7 +233,10 @@ export default function PetAccessoryShop({ userId }) {
         </div>
       )}
 
-      <button className="shop-button" onClick={() => setActiveTab(activeTab === "inventory" ? "shop" : "inventory")}>
+      <button 
+        className="shop-button" 
+        onClick={() => setActiveTab(activeTab === "inventory" ? "shop" : "inventory")}
+      >
         {activeTab === "inventory" ? "◄ Back to Shop" : "Inventory"}
       </button>
     </div>

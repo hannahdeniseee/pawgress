@@ -14,22 +14,22 @@ const getDaysInMonth = (year, month) => {
 
 const sBg = (s) => s === "completed" ? "#EAF3DE" : s === "in progress" ? "#FAEEDA" : "#FCEBEB";
 const sTx = (s) => s === "completed" ? "#3B6D11" : s === "in progress" ? "#854F0B" : "#A32D2D";
-const nxt = (s) => s === "uncompleted" ? "in progress" : s === "in progress" ? "completed" : "uncompleted";
+const nxt = (s) => {
+  if (s === "completed") return "completed";
+  if (s === "uncompleted") return "in progress";
+  if (s === "in progress") return "completed";
+  return s;
+};
 
-// Reward amounts
-const COINS_PER_TASK = 5;
-const XP_PER_TASK = 10;
-
-// Milestone rewards
+// Milestone rewards (NO per-task rewards)
 const DAILY_MILESTONE_COINS = 50;
 const DAILY_MILESTONE_XP = 75;
 const WEEKLY_MILESTONE_COINS = 200;
 const WEEKLY_MILESTONE_XP = 300;
 
-let _id = 1;
-const uid = () => _id++;
+const API_BASE = "http://localhost:5000/api";
 
-function TodoCalendarWithQuests() {
+function TodoCalendarWithQuests({ currentUser }) {
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
 
@@ -44,14 +44,33 @@ function TodoCalendarWithQuests() {
   const [eventVenue, setEventVenue] = useState("");
   const [eventDate, setEventDate] = useState(todayStr);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedDayDetails, setSelectedDayDetails] = useState(null);
   const [rewardNotification, setRewardNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [processingTasks, setProcessingTasks] = useState(new Set());
   
-  // Track claimed milestones to prevent duplicate rewards
+  // Track claimed milestones
   const [claimedDailyMilestone, setClaimedDailyMilestone] = useState(false);
   const [claimedWeeklyMilestone, setClaimedWeeklyMilestone] = useState(false);
 
-  const updateUserRewards = (coinsEarned, xpEarned, message, isMilestone = false) => {
+  const updateUserRewards = async (coinsEarned, xpEarned, message, isMilestone = false) => {
+    console.log(`📊 GIVING REWARDS: +${coinsEarned} coins, +${xpEarned} XP`);
+    
+    // Update backend coins
+    if (currentUser?.id && coinsEarned > 0) {
+      try {
+        await fetch(`${API_BASE}/users/${currentUser.id}/coins`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: coinsEarned })
+        });
+        console.log(`✅ Synced +${coinsEarned} coins to backend`);
+      } catch (err) {
+        console.error("Failed to sync coins:", err);
+      }
+    }
+    
+    // Also update localStorage for immediate display
     const savedUser = localStorage.getItem("user_data");
     let user = { coins: 0, xp: 0 };
     
@@ -75,7 +94,6 @@ function TodoCalendarWithQuests() {
     window.dispatchEvent(new CustomEvent('userRewardsUpdated', { detail: user }));
   };
 
-  // Helper to get start of week (Sunday)
   const getWeekStart = (date) => {
     const d = new Date(date);
     const day = d.getDay();
@@ -84,7 +102,6 @@ function TodoCalendarWithQuests() {
     return d;
   };
 
-  // Helper to get end of week (Saturday)
   const getWeekEnd = (date) => {
     const d = new Date(date);
     const day = d.getDay();
@@ -93,13 +110,19 @@ function TodoCalendarWithQuests() {
     return d;
   };
 
-  // Check and award milestones
-  const checkMilestones = (updatedTasks) => {
-    // Daily milestone: 5 completed tasks today
-    const todayTasks = updatedTasks.filter(t => t.deadline === todayStr && t.status === "completed");
+  const checkAndAwardMilestones = (updatedTasks) => {
+    console.log("🔍 Checking milestones...");
+    
+    // Daily milestone - compare by date string (YYYY-MM-DD)
+    const todayTasks = updatedTasks.filter(t => {
+      const taskDate = t.deadline ? t.deadline.split('T')[0] : t.deadline;
+      return taskDate === todayStr && t.status === "completed";
+    });
     const dailyCompleted = todayTasks.length;
+    console.log(`📅 Daily completed: ${dailyCompleted}/5, claimed: ${claimedDailyMilestone}`);
     
     if (dailyCompleted >= 5 && !claimedDailyMilestone) {
+      console.log("🎯 DAILY MILESTONE REACHED!");
       setClaimedDailyMilestone(true);
       localStorage.setItem("claimed_daily_milestone", "true");
       updateUserRewards(
@@ -111,16 +134,19 @@ function TodoCalendarWithQuests() {
       return true;
     }
     
-    // Weekly milestone: 20 completed tasks this week
+    // Weekly milestone - compare Date objects
     const weekStart = getWeekStart(today);
     const weekEnd = getWeekEnd(today);
     const weekTasks = updatedTasks.filter(t => {
-      const taskDate = new Date(t.deadline + "T00:00:00");
-      return t.status === "completed" && taskDate >= weekStart && taskDate <= weekEnd;
+      if (t.status !== "completed") return false;
+      const taskDate = new Date(t.deadline);
+      return taskDate >= weekStart && taskDate <= weekEnd;
     });
     const weeklyCompleted = weekTasks.length;
+    console.log(`📆 Weekly completed: ${weeklyCompleted}/20, claimed: ${claimedWeeklyMilestone}`);
     
     if (weeklyCompleted >= 20 && !claimedWeeklyMilestone) {
+      console.log("🏆 WEEKLY MILESTONE REACHED!");
       setClaimedWeeklyMilestone(true);
       localStorage.setItem("claimed_weekly_milestone", "true");
       updateUserRewards(
@@ -135,10 +161,129 @@ function TodoCalendarWithQuests() {
     return false;
   };
 
-  // Reset milestone claims when tasks change (for new day/week)
+  // Load tasks from backend
+  const loadTasksFromBackend = async () => {
+    if (!currentUser?.id) return [];
+    try {
+      const res = await fetch(`${API_BASE}/users/${currentUser.id}/tasks`);
+      if (res.ok) {
+        const data = await res.json();
+        setTasks(data);
+        console.log("✅ Loaded tasks from backend:", data.length);
+        return data;
+      }
+    } catch (err) {
+      console.error("Failed to load tasks:", err);
+    }
+    return [];
+  };
+
+  // Load events from backend
+  const loadEventsFromBackend = async () => {
+    if (!currentUser?.id) return [];
+    try {
+      const res = await fetch(`${API_BASE}/users/${currentUser.id}/events`);
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(data);
+        console.log("✅ Loaded events from backend:", data.length);
+        return data;
+      }
+    } catch (err) {
+      console.error("Failed to load events:", err);
+    }
+    return [];
+  };
+
+  // Save task to backend
+  const saveTaskToBackend = async (task) => {
+    if (!currentUser?.id) return null;
+    try {
+      const res = await fetch(`${API_BASE}/users/${currentUser.id}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: task.name, deadline: task.deadline })
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        console.log("✅ Task saved to backend:", saved);
+        return saved;
+      }
+    } catch (err) {
+      console.error("Failed to save task:", err);
+    }
+    return null;
+  };
+
+  // Update task status in backend
+  const updateTaskStatusInBackend = async (taskId, status) => {
+    try {
+      const res = await fetch(`${API_BASE}/tasks/${taskId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+      return res.ok;
+    } catch (err) {
+      console.error("Failed to update task status:", err);
+      return false;
+    }
+  };
+
+  // Delete task from backend
+  const deleteTaskFromBackend = async (taskId) => {
+    try {
+      const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
+        method: "DELETE"
+      });
+      return res.ok;
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+      return false;
+    }
+  };
+
+  // Save event to backend
+  const saveEventToBackend = async (event) => {
+    if (!currentUser?.id) return null;
+    try {
+      const res = await fetch(`${API_BASE}/users/${currentUser.id}/events`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          title: event.title, 
+          date: event.date,
+          time: event.time,
+          venue: event.venue
+        })
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        console.log("✅ Event saved to backend:", saved);
+        return saved;
+      }
+    } catch (err) {
+      console.error("Failed to save event:", err);
+    }
+    return null;
+  };
+
+  // Delete event from backend
+  const deleteEventFromBackend = async (eventId) => {
+    try {
+      const res = await fetch(`${API_BASE}/events/${eventId}`, {
+        method: "DELETE"
+      });
+      return res.ok;
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+      return false;
+    }
+  };
+
+  // Reset milestone claims
   useEffect(() => {
     if (!isLoading) {
-      // Check if daily milestone should reset (new day)
       const savedDailyDate = localStorage.getItem("claimed_daily_date");
       const todayDate = new Date().toDateString();
       
@@ -151,7 +296,6 @@ function TodoCalendarWithQuests() {
         setClaimedDailyMilestone(savedDailyClaim === "true");
       }
       
-      // Check if weekly milestone should reset (new week)
       const savedWeeklyWeek = localStorage.getItem("claimed_weekly_week");
       const currentWeek = `${getWeekStart(today).toDateString()}`;
       
@@ -166,76 +310,51 @@ function TodoCalendarWithQuests() {
     }
   }, [isLoading, today]);
 
-  // LOAD DATA - runs only once on mount
+  // LOAD DATA - from backend on mount
   useEffect(() => {
-    console.log("Loading data from localStorage...");
-    
-    const savedTasks = localStorage.getItem("quests_tasks");
-    if (savedTasks) {
-      const parsedTasks = JSON.parse(savedTasks);
-      setTasks(parsedTasks);
-      if (parsedTasks.length > 0) {
-        const maxId = Math.max(...parsedTasks.map(t => t.id), 0);
-        _id = maxId + 1;
+    const loadData = async () => {
+      console.log("Loading data from backend...");
+      
+      if (currentUser?.id) {
+        await loadTasksFromBackend();
+        await loadEventsFromBackend();
       }
-      console.log("Loaded tasks:", parsedTasks.length);
-    }
+      
+      const savedUser = localStorage.getItem("user_data");
+      if (!savedUser) {
+        localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0 }));
+      }
+      
+      // Load milestone claim states
+      const savedDailyDate = localStorage.getItem("claimed_daily_date");
+      const todayDate = new Date().toDateString();
+      
+      if (savedDailyDate !== todayDate) {
+        localStorage.setItem("claimed_daily_date", todayDate);
+        localStorage.setItem("claimed_daily_milestone", "false");
+        setClaimedDailyMilestone(false);
+      } else {
+        const savedDailyClaim = localStorage.getItem("claimed_daily_milestone");
+        setClaimedDailyMilestone(savedDailyClaim === "true");
+      }
+      
+      const savedWeeklyWeek = localStorage.getItem("claimed_weekly_week");
+      const currentWeek = `${getWeekStart(today).toDateString()}`;
+      
+      if (savedWeeklyWeek !== currentWeek) {
+        localStorage.setItem("claimed_weekly_week", currentWeek);
+        localStorage.setItem("claimed_weekly_milestone", "false");
+        setClaimedWeeklyMilestone(false);
+      } else {
+        const savedWeeklyClaim = localStorage.getItem("claimed_weekly_milestone");
+        setClaimedWeeklyMilestone(savedWeeklyClaim === "true");
+      }
+      
+      setIsLoading(false);
+    };
     
-    const savedEvents = localStorage.getItem("quests_events");
-    if (savedEvents) {
-      const parsedEvents = JSON.parse(savedEvents);
-      setEvents(parsedEvents);
-      console.log("Loaded events:", parsedEvents.length);
-    }
-    
-    const savedUser = localStorage.getItem("user_data");
-    if (!savedUser) {
-      localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0 }));
-    }
-    
-    // Load milestone claim states
-    const savedDailyDate = localStorage.getItem("claimed_daily_date");
-    const todayDate = new Date().toDateString();
-    
-    if (savedDailyDate !== todayDate) {
-      localStorage.setItem("claimed_daily_date", todayDate);
-      localStorage.setItem("claimed_daily_milestone", "false");
-      setClaimedDailyMilestone(false);
-    } else {
-      const savedDailyClaim = localStorage.getItem("claimed_daily_milestone");
-      setClaimedDailyMilestone(savedDailyClaim === "true");
-    }
-    
-    const savedWeeklyWeek = localStorage.getItem("claimed_weekly_week");
-    const currentWeek = `${getWeekStart(today).toDateString()}`;
-    
-    if (savedWeeklyWeek !== currentWeek) {
-      localStorage.setItem("claimed_weekly_week", currentWeek);
-      localStorage.setItem("claimed_weekly_milestone", "false");
-      setClaimedWeeklyMilestone(false);
-    } else {
-      const savedWeeklyClaim = localStorage.getItem("claimed_weekly_milestone");
-      setClaimedWeeklyMilestone(savedWeeklyClaim === "true");
-    }
-    
-    setIsLoading(false);
-  }, []);
-
-  // SAVE TASKS - runs only when tasks change AND not during initial load
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem("quests_tasks", JSON.stringify(tasks));
-      console.log("Tasks saved:", tasks.length);
-    }
-  }, [tasks, isLoading]);
-
-  // SAVE EVENTS - runs only when events change AND not during initial load
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem("quests_events", JSON.stringify(events));
-      console.log("Events saved:", events.length);
-    }
-  }, [events, isLoading]);
+    loadData();
+  }, [currentUser]);
 
   const goToPreviousMonth = () => {
     if (currentMonth === 0) {
@@ -260,69 +379,111 @@ function TodoCalendarWithQuests() {
     setCurrentYear(today.getFullYear());
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!newTask.trim()) return;
+    
     const newTaskObj = { 
-      id: uid(), 
       name: newTask, 
       deadline: taskDeadline, 
       status: "uncompleted" 
     };
-    setTasks(prev => [...prev, newTaskObj]);
+    
+    const savedTask = await saveTaskToBackend(newTaskObj);
+    if (savedTask) {
+      setTasks(prev => [...prev, savedTask]);
+      console.log("✅ Task added to backend:", savedTask);
+    } else {
+      console.error("Failed to save task to backend");
+      alert("Failed to save task. Make sure backend is running.");
+    }
     setNewTask("");
-    console.log("Added task:", newTaskObj);
   };
 
-  const toggleStatus = (task) => {
-    const next = nxt(task.status);
+  const toggleStatus = async (task) => {
+    if (processingTasks.has(task.id)) {
+      console.log(`⚠️ Task ${task.id} already processing, skipping`);
+      return;
+    }
     
-    setTasks(prev => {
-      const updatedTasks = prev.map(t => 
-        t.id === task.id ? { ...t, status: next } : t
-      );
-      
-      // Only check milestones when marking as completed
-      if (next === "completed" && task.status !== "completed") {
-        // Give per-task reward first
-        updateUserRewards(
-          COINS_PER_TASK, 
-          XP_PER_TASK, 
-          `✅ Task Complete: "${task.name}"\n+${COINS_PER_TASK} coins, +${XP_PER_TASK} XP!`,
-          false
-        );
-        
-        // Then check for milestone bonuses
-        checkMilestones(updatedTasks);
+    setProcessingTasks(prev => new Set([...prev, task.id]));
+    
+    try {
+      const next = nxt(task.status);
+      if (next === task.status) {
+        setProcessingTasks(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(task.id);
+          return newSet;
+        });
+        return;
       }
       
-      return updatedTasks;
-    });
-    
-    window.dispatchEvent(new CustomEvent('tasksUpdated'));
+      const success = await updateTaskStatusInBackend(task.id, next);
+      
+      if (success) {
+        setTasks(prev => {
+          const updatedTasks = prev.map(t => 
+            t.id === task.id ? { ...t, status: next } : t
+          );
+          
+          if (next === "completed" && task.status !== "completed") {
+            console.log(`🎯 TASK COMPLETED! Checking milestones...`);
+            checkAndAwardMilestones(updatedTasks);
+          }
+          
+          return updatedTasks;
+        });
+      }
+      
+      window.dispatchEvent(new CustomEvent('tasksUpdated'));
+    } finally {
+      setTimeout(() => {
+        setProcessingTasks(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(task.id);
+          return newSet;
+        });
+      }, 500);
+    }
   };
 
-  const deleteTask = (id) => {
+  const deleteTask = async (id) => {
+    const taskToDelete = tasks.find(t => t.id === id);
+    if (taskToDelete && taskToDelete.status === "completed") {
+      alert("Completed tasks cannot be deleted!");
+      return;
+    }
+    
+    await deleteTaskFromBackend(id);
     setTasks(prev => prev.filter(t => t.id !== id));
     window.dispatchEvent(new CustomEvent('tasksUpdated'));
   };
 
-  const addEvent = () => {
+  const addEvent = async () => {
     if (!eventTitle.trim()) return;
     const formattedDate = eventDate || todayStr;
     const newEvent = { 
-      id: uid(), 
       title: eventTitle, 
       date: formattedDate,
       time: eventTime, 
       venue: eventVenue 
     };
-    setEvents(prev => [...prev, newEvent]);
+    
+    const savedEvent = await saveEventToBackend(newEvent);
+    if (savedEvent) {
+      setEvents(prev => [...prev, savedEvent]);
+      console.log("✅ Event added to backend:", savedEvent);
+    } else {
+      console.error("Failed to save event to backend");
+      alert("Failed to save event. Make sure backend is running.");
+    }
     setEventTitle("");
     setEventTime("");
     setEventVenue("");
   };
 
-  const deleteEvent = (id) => {
+  const deleteEvent = async (id) => {
+    await deleteEventFromBackend(id);
     setEvents(prev => prev.filter(e => e.id !== id));
   };
 
@@ -345,14 +506,20 @@ function TodoCalendarWithQuests() {
   );
 
   const quests = useMemo(() => {
-    const todayTasks = tasksByDate[todayStr] || [];
-    const dailyDone = todayTasks.filter(t => t.status === "completed").length;
+    // Daily quest - count completed tasks with today's date
+    const todayTasks = tasks.filter(t => {
+      const taskDate = t.deadline ? t.deadline.split('T')[0] : t.deadline;
+      return taskDate === todayStr && t.status === "completed";
+    });
+    const dailyDone = todayTasks.length;
 
+    // Weekly quest - count completed tasks within current week
     const weekStart = getWeekStart(today);
     const weekEnd = getWeekEnd(today);
     const weekTasks = tasks.filter(t => {
-      const taskDate = new Date(t.deadline + "T00:00:00");
-      return t.status === "completed" && taskDate >= weekStart && taskDate <= weekEnd;
+      if (t.status !== "completed") return false;
+      const taskDate = new Date(t.deadline);
+      return taskDate >= weekStart && taskDate <= weekEnd;
     });
     const weekDone = weekTasks.length;
 
@@ -360,7 +527,7 @@ function TodoCalendarWithQuests() {
       { title: "Complete 5 tasks today", target: 5, progress: dailyDone, color: "#1D9E75" },
       { title: "Complete 20 tasks this week", target: 20, progress: weekDone, color: "#4E56C0" },
     ];
-  }, [tasksByDate, tasks, todayStr]);
+  }, [tasks, todayStr]);
 
   const days = getDaysInMonth(currentYear, currentMonth);
   const firstDayWeekday = days[0]?.getDay() || 0;
@@ -413,13 +580,20 @@ function TodoCalendarWithQuests() {
             {(tasksByDate[todayStr] || []).map((task) => (
               <div key={task.id} className="task-item">
                 <div className={`task-status-dot status-${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`} />
-                <span onClick={() => toggleStatus(task)} className={`task-name ${task.status === "completed" ? "completed" : ""}`}>
+                <span onClick={() => toggleStatus(task)} className={`task-name ${task.status === "completed" ? "completed" : ""}`} style={{ cursor: "pointer" }}>
                   {task.name}
                 </span>
                 <span className={`status-badge ${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`}>
                   {task.status}
                 </span>
-                <button className="delete-btn" onClick={() => deleteTask(task.id)}>×</button>
+                <button 
+                  className="delete-btn" 
+                  onClick={() => deleteTask(task.id)}
+                  disabled={task.status === "completed"}
+                  style={{ opacity: task.status === "completed" ? 0.5 : 1, cursor: task.status === "completed" ? "not-allowed" : "pointer" }}
+                >
+                  ×
+                </button>
               </div>
             ))}
             {(eventsByDate[todayStr] || []).map((ev) => (
@@ -468,21 +642,43 @@ function TodoCalendarWithQuests() {
               {days.map((day) => {
                 const dateStr = day.toISOString().split("T")[0];
                 const isToday = dateStr === todayStr;
+                const dayTasks = tasksByDate[dateStr] || [];
+                const dayEvents = eventsByDate[dateStr] || [];
+                const totalItems = dayTasks.length + dayEvents.length;
+                const hasMore = totalItems > 2;
+                
                 return (
                   <div key={dateStr} className={`calendar-cell ${isToday ? "today" : ""}`}>
                     <div className="calendar-date">{day.getDate()}</div>
-                    {(tasksByDate[dateStr] || []).slice(0, 2).map((task) => (
-                      <div key={task.id} className="calendar-chip chip-task" style={{ background: sBg(task.status), color: sTx(task.status), cursor: "pointer" }} onClick={() => toggleStatus(task)}>
-                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{task.name}</span>
-                        <button className="chip-delete" onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}>×</button>
-                      </div>
-                    ))}
-                    {(eventsByDate[dateStr] || []).slice(0, 1).map((ev) => (
-                      <div key={ev.id} className="calendar-chip chip-event" onClick={() => setSelectedEvent(ev)} style={{ cursor: "pointer" }}>
-                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{ev.title}</span>
-                        <button className="chip-delete" onClick={(e) => { e.stopPropagation(); deleteEvent(ev.id); }}>×</button>
-                      </div>
-                    ))}
+                    <div className="calendar-tasks-list">
+                      {dayTasks.slice(0, 2).map((task) => (
+                        <div key={task.id} className="calendar-chip chip-task" style={{ background: sBg(task.status), color: sTx(task.status), cursor: "pointer" }} onClick={() => toggleStatus(task)}>
+                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{task.name}</span>
+                          <button 
+                            className="chip-delete" 
+                            onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
+                            disabled={task.status === "completed"}
+                            style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {dayEvents.slice(0, 1).map((ev) => (
+                        <div key={ev.id} className="calendar-chip chip-event" onClick={() => setSelectedEvent(ev)} style={{ cursor: "pointer" }}>
+                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{ev.title}</span>
+                          <button className="chip-delete" onClick={(e) => { e.stopPropagation(); deleteEvent(ev.id); }}>×</button>
+                        </div>
+                      ))}
+                      {hasMore && (
+                        <button 
+                          className="view-all-btn"
+                          onClick={() => setSelectedDayDetails({ date: dateStr, tasks: dayTasks, events: dayEvents })}
+                        >
+                          📋 View all ({totalItems})
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -502,6 +698,61 @@ function TodoCalendarWithQuests() {
               <p><strong>📅 Date:</strong> {selectedEvent.date}</p>
               <p><strong>⏰ Time:</strong> {selectedEvent.time || "Not specified"}</p>
               <p><strong>📍 Venue:</strong> {selectedEvent.venue || "Not specified"}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedDayDetails && (
+        <div className="modal-overlay" onClick={() => setSelectedDayDetails(null)}>
+          <div className="modal-content day-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>📅 {selectedDayDetails.date}</h3>
+              <button className="modal-close" onClick={() => setSelectedDayDetails(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              {selectedDayDetails.tasks.length > 0 && (
+                <>
+                  <h4 style={{ color: "#4E56C0", marginBottom: "10px" }}>✅ Tasks ({selectedDayDetails.tasks.length})</h4>
+                  {selectedDayDetails.tasks.map((task) => (
+                    <div key={task.id} className="day-modal-item">
+                      <div className={`task-status-dot status-${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`} />
+                      <span onClick={() => { toggleStatus(task); setSelectedDayDetails(null); }} style={{ flex: 1, cursor: "pointer", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
+                        {task.name}
+                      </span>
+                      <span className={`status-badge ${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`}>
+                        {task.status}
+                      </span>
+                      <button 
+                        className="delete-btn" 
+                        onClick={() => { deleteTask(task.id); setSelectedDayDetails(null); }}
+                        disabled={task.status === "completed"}
+                        style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {selectedDayDetails.events.length > 0 && (
+                <>
+                  <h4 style={{ color: "#4E56C0", marginBottom: "10px", marginTop: "15px" }}>📌 Events ({selectedDayDetails.events.length})</h4>
+                  {selectedDayDetails.events.map((ev) => (
+                    <div key={ev.id} className="day-modal-item">
+                      <div className="task-status-dot" style={{ background: "#4E56C0" }} />
+                      <span style={{ flex: 1 }}>{ev.title}</span>
+                      <span style={{ fontSize: 12, color: "#8890d8" }}>{ev.time && `${ev.time} `}{ev.venue && `@ ${ev.venue}`}</span>
+                      <button className="delete-btn" onClick={() => { deleteEvent(ev.id); setSelectedDayDetails(null); }}>×</button>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {selectedDayDetails.tasks.length === 0 && selectedDayDetails.events.length === 0 && (
+                <p style={{ textAlign: "center", color: "#999" }}>✨ No tasks or events for this day ✨</p>
+              )}
             </div>
           </div>
         </div>
