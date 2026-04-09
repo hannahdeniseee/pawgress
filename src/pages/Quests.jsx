@@ -16,8 +16,15 @@ const sBg = (s) => s === "completed" ? "#EAF3DE" : s === "in progress" ? "#FAEED
 const sTx = (s) => s === "completed" ? "#3B6D11" : s === "in progress" ? "#854F0B" : "#A32D2D";
 const nxt = (s) => s === "uncompleted" ? "in progress" : s === "in progress" ? "completed" : "uncompleted";
 
-const COINS_PER_TASK = 10;
-const XP_PER_TASK = 15;
+// Reward amounts
+const COINS_PER_TASK = 5;
+const XP_PER_TASK = 10;
+
+// Milestone rewards
+const DAILY_MILESTONE_COINS = 50;
+const DAILY_MILESTONE_XP = 75;
+const WEEKLY_MILESTONE_COINS = 200;
+const WEEKLY_MILESTONE_XP = 300;
 
 let _id = 1;
 const uid = () => _id++;
@@ -39,8 +46,12 @@ function TodoCalendarWithQuests() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [rewardNotification, setRewardNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Track claimed milestones to prevent duplicate rewards
+  const [claimedDailyMilestone, setClaimedDailyMilestone] = useState(false);
+  const [claimedWeeklyMilestone, setClaimedWeeklyMilestone] = useState(false);
 
-  const updateUserRewards = (coinsEarned, xpEarned) => {
+  const updateUserRewards = (coinsEarned, xpEarned, message, isMilestone = false) => {
     const savedUser = localStorage.getItem("user_data");
     let user = { coins: 0, xp: 0 };
     
@@ -52,10 +63,108 @@ function TodoCalendarWithQuests() {
     user.xp = (user.xp || 0) + xpEarned;
     localStorage.setItem("user_data", JSON.stringify(user));
     
-    setRewardNotification({ coins: coinsEarned, xp: xpEarned });
-    setTimeout(() => setRewardNotification(null), 3000);
+    setRewardNotification({ 
+      coins: coinsEarned, 
+      xp: xpEarned, 
+      message, 
+      isMilestone,
+      totalCoins: user.coins,
+      totalXp: user.xp
+    });
+    setTimeout(() => setRewardNotification(null), 4000);
     window.dispatchEvent(new CustomEvent('userRewardsUpdated', { detail: user }));
   };
+
+  // Helper to get start of week (Sunday)
+  const getWeekStart = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    d.setDate(d.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  // Helper to get end of week (Saturday)
+  const getWeekEnd = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    d.setDate(d.getDate() + (6 - day));
+    d.setHours(23, 59, 59, 999);
+    return d;
+  };
+
+  // Check and award milestones
+  const checkMilestones = (updatedTasks) => {
+    // Daily milestone: 5 completed tasks today
+    const todayTasks = updatedTasks.filter(t => t.deadline === todayStr && t.status === "completed");
+    const dailyCompleted = todayTasks.length;
+    
+    if (dailyCompleted >= 5 && !claimedDailyMilestone) {
+      setClaimedDailyMilestone(true);
+      localStorage.setItem("claimed_daily_milestone", "true");
+      updateUserRewards(
+        DAILY_MILESTONE_COINS, 
+        DAILY_MILESTONE_XP, 
+        `🌟 DAILY QUEST COMPLETE! 🌟\nCompleted 5 tasks today!\n+${DAILY_MILESTONE_COINS} coins, +${DAILY_MILESTONE_XP} XP!`,
+        true
+      );
+      return true;
+    }
+    
+    // Weekly milestone: 20 completed tasks this week
+    const weekStart = getWeekStart(today);
+    const weekEnd = getWeekEnd(today);
+    const weekTasks = updatedTasks.filter(t => {
+      const taskDate = new Date(t.deadline + "T00:00:00");
+      return t.status === "completed" && taskDate >= weekStart && taskDate <= weekEnd;
+    });
+    const weeklyCompleted = weekTasks.length;
+    
+    if (weeklyCompleted >= 20 && !claimedWeeklyMilestone) {
+      setClaimedWeeklyMilestone(true);
+      localStorage.setItem("claimed_weekly_milestone", "true");
+      updateUserRewards(
+        WEEKLY_MILESTONE_COINS, 
+        WEEKLY_MILESTONE_XP, 
+        `🏆 WEEKLY QUEST COMPLETE! 🏆\nCompleted 20 tasks this week!\n+${WEEKLY_MILESTONE_COINS} coins, +${WEEKLY_MILESTONE_XP} XP!`,
+        true
+      );
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Reset milestone claims when tasks change (for new day/week)
+  useEffect(() => {
+    if (!isLoading) {
+      // Check if daily milestone should reset (new day)
+      const savedDailyDate = localStorage.getItem("claimed_daily_date");
+      const todayDate = new Date().toDateString();
+      
+      if (savedDailyDate !== todayDate) {
+        setClaimedDailyMilestone(false);
+        localStorage.setItem("claimed_daily_date", todayDate);
+        localStorage.setItem("claimed_daily_milestone", "false");
+      } else {
+        const savedDailyClaim = localStorage.getItem("claimed_daily_milestone");
+        setClaimedDailyMilestone(savedDailyClaim === "true");
+      }
+      
+      // Check if weekly milestone should reset (new week)
+      const savedWeeklyWeek = localStorage.getItem("claimed_weekly_week");
+      const currentWeek = `${getWeekStart(today).toDateString()}`;
+      
+      if (savedWeeklyWeek !== currentWeek) {
+        setClaimedWeeklyMilestone(false);
+        localStorage.setItem("claimed_weekly_week", currentWeek);
+        localStorage.setItem("claimed_weekly_milestone", "false");
+      } else {
+        const savedWeeklyClaim = localStorage.getItem("claimed_weekly_milestone");
+        setClaimedWeeklyMilestone(savedWeeklyClaim === "true");
+      }
+    }
+  }, [isLoading, today]);
 
   // LOAD DATA - runs only once on mount
   useEffect(() => {
@@ -84,8 +193,33 @@ function TodoCalendarWithQuests() {
       localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0 }));
     }
     
+    // Load milestone claim states
+    const savedDailyDate = localStorage.getItem("claimed_daily_date");
+    const todayDate = new Date().toDateString();
+    
+    if (savedDailyDate !== todayDate) {
+      localStorage.setItem("claimed_daily_date", todayDate);
+      localStorage.setItem("claimed_daily_milestone", "false");
+      setClaimedDailyMilestone(false);
+    } else {
+      const savedDailyClaim = localStorage.getItem("claimed_daily_milestone");
+      setClaimedDailyMilestone(savedDailyClaim === "true");
+    }
+    
+    const savedWeeklyWeek = localStorage.getItem("claimed_weekly_week");
+    const currentWeek = `${getWeekStart(today).toDateString()}`;
+    
+    if (savedWeeklyWeek !== currentWeek) {
+      localStorage.setItem("claimed_weekly_week", currentWeek);
+      localStorage.setItem("claimed_weekly_milestone", "false");
+      setClaimedWeeklyMilestone(false);
+    } else {
+      const savedWeeklyClaim = localStorage.getItem("claimed_weekly_milestone");
+      setClaimedWeeklyMilestone(savedWeeklyClaim === "true");
+    }
+    
     setIsLoading(false);
-  }, []); // Empty dependency array - runs only once
+  }, []);
 
   // SAVE TASKS - runs only when tasks change AND not during initial load
   useEffect(() => {
@@ -142,11 +276,28 @@ function TodoCalendarWithQuests() {
   const toggleStatus = (task) => {
     const next = nxt(task.status);
     
-    if (next === "completed" && task.status !== "completed") {
-      updateUserRewards(COINS_PER_TASK, XP_PER_TASK);
-    }
+    setTasks(prev => {
+      const updatedTasks = prev.map(t => 
+        t.id === task.id ? { ...t, status: next } : t
+      );
+      
+      // Only check milestones when marking as completed
+      if (next === "completed" && task.status !== "completed") {
+        // Give per-task reward first
+        updateUserRewards(
+          COINS_PER_TASK, 
+          XP_PER_TASK, 
+          `✅ Task Complete: "${task.name}"\n+${COINS_PER_TASK} coins, +${XP_PER_TASK} XP!`,
+          false
+        );
+        
+        // Then check for milestone bonuses
+        checkMilestones(updatedTasks);
+      }
+      
+      return updatedTasks;
+    });
     
-    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: next } : t));
     window.dispatchEvent(new CustomEvent('tasksUpdated'));
   };
 
@@ -197,17 +348,13 @@ function TodoCalendarWithQuests() {
     const todayTasks = tasksByDate[todayStr] || [];
     const dailyDone = todayTasks.filter(t => t.status === "completed").length;
 
-    const dow = today.getDay();
-    const ws = new Date(today); 
-    ws.setDate(today.getDate() - dow);
-    ws.setHours(0, 0, 0, 0);
-    const we = new Date(ws); 
-    we.setDate(ws.getDate() + 6);
-    we.setHours(23, 59, 59, 999);
-    const weekDone = tasks.filter(t => {
-      const d = new Date(t.deadline + "T00:00:00");
-      return t.status === "completed" && d >= ws && d <= we;
-    }).length;
+    const weekStart = getWeekStart(today);
+    const weekEnd = getWeekEnd(today);
+    const weekTasks = tasks.filter(t => {
+      const taskDate = new Date(t.deadline + "T00:00:00");
+      return t.status === "completed" && taskDate >= weekStart && taskDate <= weekEnd;
+    });
+    const weekDone = weekTasks.length;
 
     return [
       { title: "Complete 5 tasks today", target: 5, progress: dailyDone, color: "#1D9E75" },
@@ -224,8 +371,16 @@ function TodoCalendarWithQuests() {
   return (
     <div className="quests-root">
       {rewardNotification && (
-        <div className="reward-toast">
-          🎉 +{rewardNotification.coins} coins & +{rewardNotification.xp} XP! 🎉
+        <div className={`reward-toast ${rewardNotification.isMilestone ? 'milestone' : ''}`}>
+          <div className="reward-toast-icon">
+            {rewardNotification.isMilestone ? '🏆' : '✅'}
+          </div>
+          <div className="reward-toast-content">
+            <div className="reward-toast-message">{rewardNotification.message}</div>
+            <div className="reward-toast-total">
+              Total: {rewardNotification.totalCoins} 🐾 coins | {rewardNotification.totalXp} ⭐ XP
+            </div>
+          </div>
         </div>
       )}
       

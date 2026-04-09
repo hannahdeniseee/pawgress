@@ -1,12 +1,15 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
-import userEvent from '@testing-library/user-event';
 import TodoCalendarWithQuests from "../pages/Quests";
 
-// Mock CustomEvent properly
-global.CustomEvent = vi.fn().mockImplementation((eventName, options) => {
-  return { type: eventName, detail: options?.detail };
-});
+// Mock CustomEvent properly as a class
+class MockCustomEvent {
+  constructor(eventName, options) {
+    this.type = eventName;
+    this.detail = options?.detail;
+  }
+}
+global.CustomEvent = MockCustomEvent;
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -132,8 +135,6 @@ describe("TodoCalendarWithQuests", () => {
     });
 
     it("toggles a task status to completed and gives rewards", async () => {
-      const consoleSpy = vi.spyOn(console, 'log');
-      
       render(<TodoCalendarWithQuests />);
 
       const input = screen.getByPlaceholderText("Task name");
@@ -146,15 +147,16 @@ describe("TodoCalendarWithQuests", () => {
       });
 
       const task = screen.getAllByText("Complete Task")[0];
+      // First click: uncompleted → in progress
       fireEvent.click(task);
+      
+      // Second click: in progress → completed (gives rewards)
       fireEvent.click(task);
 
-      // Check that the reward toast appears instead of console log
+      // Check that reward toast appears
       await waitFor(() => {
-        expect(screen.getByText(/coins/)).toBeInTheDocument();
+        expect(screen.getByText(/Task Complete/)).toBeInTheDocument();
       });
-      
-      consoleSpy.mockRestore();
     });
 
     it("deletes a task", async () => {

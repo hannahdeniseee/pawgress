@@ -419,3 +419,65 @@
   padding: 0;
   display: inline-block;
 }
+
+.reward-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #4E56C0, #8890d8);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 16px;
+  z-index: 1000;
+  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  font-family: "Jersey 15", serif;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.reward-toast.milestone {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+  animation: slideDown 0.3s ease-out, pulse 0.5s ease-in-out;
+}
+
+.reward-toast-icon {
+  font-size: 32px;
+  margin-right: 12px;
+  float: left;
+}
+
+.reward-toast-content {
+  overflow: hidden;
+}
+
+.reward-toast-message {
+  font-size: 16px;
+  font-weight: bold;
+  white-space: pre-line;
+}
+
+.reward-toast-total {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 5px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.05); }
+  100% { transform: translateX(-50%) scale(1); }
+}
