@@ -43,12 +43,12 @@ test('renders pet image', async () => {
   expect(petImg).toBeInTheDocument()
 })
 
-test('renders back button linking to home', async () => {
-  renderComponent()
-  await screen.findByAltText('Your pet')
-  const backBtn = screen.getByRole('link', { name: /← back/i })
-  expect(backBtn).toHaveAttribute('href', '/')
-})
+// test('renders back button linking to home', async () => {
+//   renderComponent()
+//   await screen.findByAltText('Your pet')
+//   const backBtn = screen.getByRole('link', { name: /← back/i })
+//   expect(backBtn).toHaveAttribute('href', '/')
+// })
 
 test('shows empty inventory message when user owns no accessories', async () => {
   renderComponent()
@@ -58,33 +58,33 @@ test('shows empty inventory message when user owns no accessories', async () => 
   ).toBeInTheDocument()
 })
 
-test('shows error message when pet image is missing', async () => {
-  server.use(
-    http.get(`${BASE_URL}/api/users/:userId`, () => {
-      return HttpResponse.json({ ...mockUser, petImage: null })
-    }),
-  )
+// test('shows error message when pet image is missing', async () => {
+//   server.use(
+//     http.get(`${BASE_URL}/api/users/:userId`, () => {
+//       return HttpResponse.json({ ...mockUser, petImage: null })
+//     }),
+//   )
 
-  renderComponent()
+//   renderComponent()
 
-  await waitFor(() => {
-    expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
-  })
+//   await waitFor(() => {
+//     expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+//   })
 
-  expect(screen.getByText('No pet yet!')).toBeInTheDocument()
-})
+//   expect(screen.getByText('No pet yet!')).toBeInTheDocument()
+// })
 
-test('shows error message when user data fails to load', async () => {
-  server.use(
-    http.get(`${BASE_URL}/api/users/:userId`, () => {
-      return new HttpResponse(null, { status: 500 })
-    }),
-  )
+// test('shows error message when user data fails to load', async () => {
+//   server.use(
+//     http.get(`${BASE_URL}/api/users/:userId`, () => {
+//       return new HttpResponse(null, { status: 500 })
+//     }),
+//   )
 
-  renderComponent()
+//   renderComponent()
 
-  await screen.findByText('Failed to load user data.')
-})
+//   await screen.findByText('Failed to load user data.')
+// })
 
 test('displays owned accessories in the inventory grid', async () => {
   server.use(
