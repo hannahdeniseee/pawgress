@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react'
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+
 import Login from './pages/Login.jsx'
 import SelectPet from './pages/SelectPet.jsx'
 import PomodoroTimer from './pages/PomodoroTimer.jsx'
 import PetShop from './pages/PetShop.jsx'
-import Todo from "./pages/Todo.jsx";
-import Friends from "./pages/Friends.jsx";
-import Profile from "./pages/Profile.jsx"
+import PetCustomization from './pages/PetCustomization.jsx';
+import Navbar from './pages/Navbar.jsx';
+import Quest from "./pages/Quests.jsx";
+import Profile from './pages/Profile.jsx';  // ← ADD THIS IMPORT
+import StudyPlanner from './pages/StudyPlanner.jsx';
 
 function AppContent() {
-  const { isLoading, isAuthenticated, user, logout } = useAuth0();
+  const { isLoading, isAuthenticated, user } = useAuth0();
   const [dbUser, setDbUser] = useState(null);
 
   useEffect(() => {
@@ -37,35 +41,30 @@ function AppContent() {
 
   const currentUser = dbUser || user;
 
-  return (
-    <>
-      <img
-        src={currentUser.picture}
-        alt={currentUser.name}
-        style={{ width: 100, borderRadius: "50%" }}
-      />
-      <h2>{currentUser.nickname || currentUser.username}</h2>
-      <p>{currentUser.email}</p>
-
-      <button
-        onClick={() =>
-          logout({ logoutParams: { returnTo: window.location.origin } })
-        }
-      >
-        Logout
-      </button>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <Profile currentUser={dbUser} />
-    </div>
-      
+  const HomePage = () => (
+    <div style={{ width: '100%', margin: 0, padding: 0 }}>
       <PomodoroTimer user={currentUser} />
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      
+      {/* SelectPet component - it should already have "My Companion" inside it */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
         {dbUser && <SelectPet currentUser={dbUser} />}
       </div>
-      {dbUser && <PetShop userId={dbUser.id} />}
-      <Todo />
-      {dbUser && <Friends currentUser={dbUser} />}
-    </>
+      
+      <Quest currentUser={currentUser} />  
+      {dbUser && <StudyPlanner userId={dbUser.id} />}
+    </div>
+  );
+
+  return (
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
+        <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
+        <Route path="/profile" element={dbUser ? <Profile currentUser={dbUser} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />  {/* ← CHANGED from Social to Profile */}
+      </Routes>
+    </Router>
   );
 }
 
@@ -81,4 +80,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

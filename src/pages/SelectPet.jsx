@@ -126,144 +126,171 @@ export default function SelectPet({ currentUser }) {
     : null;
 
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", padding: "40px"}}>
-      <h2 style={{ marginBottom: "20px", color: "#fff" }}>
-        {hasPet ? "Your Companion" : "Pet Selection"}
+    <div style={{ 
+      background: 'white', 
+      borderRadius: '20px', 
+      border: '2.5px solid #4E56C0',
+      padding: '24px',
+      width: '100%',
+      maxWidth: '500px',
+      margin: '20px auto',
+      boxShadow: '0 4px 20px rgba(100, 120, 200, 0.12)',
+      fontFamily: "'Jersey 15', 'Arial', sans-serif"
+    }}>
+      <h2 style={{ 
+        marginBottom: '20px', 
+        color: '#4E56C0',
+        fontSize: '28px',
+        textAlign: 'center',
+        fontFamily: "'Jersey 15', serif"
+      }}>
+        🐾 My Companion 🐾
       </h2>
 
-      {/* 1. Select Pet Type */}
-      {!hasPet && (
-        <div style={{ marginBottom: "20px" }}>
-          <h3 style={{ fontSize: "16px", color: "#fff", marginBottom: "10px" }}>1. Select Pet Type</h3>
-          <div style={{ display: "flex", gap: "10px" }}>
-            {Object.entries(petData).map(([key, data]) => (
-              <button
-                key={key}
-                onClick={() => handleTypeSelect(key)}
-                style={{
-                  flex: 1,
-                  padding: "15px",
-                  border: selectedType === key ? "2px solid #4CAF50" : "1px solid #ccc",
-                  borderRadius: "12px",
-                  cursor: "pointer",
-                  backgroundColor: selectedType === key ? "#f0f9f0" : "#fff",
-                  transition: "all 0.2s",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "10px"
-                }}
-              >
-                <img src={imageMap[data.image]} alt={data.name} style={{ width: "40px", height: "40px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }} />
-                <span style={{ fontWeight: "bold", color: "#222" }}>{data.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 2. Select Breed */}
-      {selectedType && !hasPet && (
-        <div style={{ marginBottom: "20px" }}>
-          <h3 style={{ fontSize: "16px", color: "#fff", marginBottom: "10px" }}>2. Select Breed</h3>
-          <div style={{ display: "grid", flexDirection: "column", gap: "10px", alignItems: "center" }}>
-            <select
-              value={selectedBreed}
-              onChange={(e) => setSelectedBreed(e.target.value)}
-              style={{
-                flex: 1,
-                padding: "15px",
-                fontSize: "16px",
-                border: "1px solid #ccc",
-                borderRadius: "12px",
-                backgroundColor: "#fff",
-                color: "#666",
-                height: "50px",
-                boxSizing: "border-box"
-              }}
-            >
-              <option value="" disabled>Choose a breed...</option>
-              {petData[selectedType].breeds.map((breed) => (
-                <option key={breed.name} value={breed.name}>{breed.name}</option>
-              ))}
-            </select>
-            {currentBreedImage && (
-              <img 
-                src={imageMap[currentBreedImage]}
-                alt="Preview" 
-                style={{ borderRadius: "8px", objectFit: "fill", border: "1px solid #ccc" }}
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Add Pet Button */}
-      {!hasPet && (
-        <button
-          onClick={selectPet}
-          disabled={!selectedType || !selectedBreed || hasPet}
-          style={{
-            width: "100%",
-            padding: "15px",
-            fontSize: "16px",
-            border: "none",
-            borderRadius: "12px",
-            backgroundColor: (!selectedType || !selectedBreed || hasPet) ? "#ccc" : "#4CAF50",
-            color: "#fff",
-            fontWeight: "bold",
-            cursor: (!selectedType || !selectedBreed || hasPet) ? "not-allowed" : "pointer",
-            height: "50px",
-            marginBottom: "30px",
-            transition: "background 0.2s"
-          }}
-        >
-          {hasPet ? "Limit Reached" : "Add Pet"}
-        </button>
-      )}
-
-      {/* Pet List */}
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {pets.map((pet) => (
-          <li key={pet.id} style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "12px 15px",
-            marginBottom: "10px",
-            borderRadius: "12px",
-            backgroundColor: "#f5f5f5",
-            boxShadow: "0 3px 6px rgba(0,0,0,0.05)"
+      {/* Show existing pet first if exists */}
+      {hasPet && pets.map((pet) => (
+        <div key={pet.id} style={{
+          textAlign: 'center',
+          marginBottom: '20px'
+        }}>
+          <img 
+            src={imageMap[pet.image] || pet.image} 
+            alt={pet.breed} 
+            style={{ 
+              width: '150px', 
+              height: '150px', 
+              objectFit: 'contain',
+              margin: '10px auto',
+              display: 'block'
+            }} 
+          />
+          <div style={{ 
+            fontSize: '24px', 
+            color: '#4E56C0',
+            fontWeight: 'bold',
+            marginTop: '10px'
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <img src={imageMap[pet.image] || pet.image} alt={pet.breed} style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} />
-              <div>
-                <span style={{ fontSize: "16px", color: "#222", fontWeight: "bold", marginRight: "10px" }}>{pet.breed}</span>
-                <span style={{ fontSize: "11px", fontWeight: "bold", padding: "2px 8px", borderRadius: "12px", backgroundColor: "#4CAF50", color: "#fff", verticalAlign: "middle" }}>
-                  {pet.type}
-                </span>
+            {pet.breed}
+          </div>
+          <div style={{ 
+            fontSize: '18px', 
+            color: '#8890d8',
+            marginTop: '5px'
+          }}>
+            {pet.type}
+          </div>
+          <button
+            onClick={() => removePet(pet.id)}
+            style={{
+              backgroundColor: "#f44336",
+              color: "#fff",
+              border: "none",
+              padding: "8px 20px",
+              borderRadius: "999px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              fontSize: "16px",
+              marginTop: "15px",
+              fontFamily: "'Jersey 15', serif",
+              transition: "background 0.2s"
+            }}
+          >
+            Remove Companion
+          </button>
+        </div>
+      ))}
+
+      {/* Show adoption form if no pet */}
+      {!hasPet && (
+        <>
+          {/* 1. Select Pet Type */}
+          <div style={{ marginBottom: "20px" }}>
+            <h3 style={{ fontSize: "18px", color: "#4E56C0", marginBottom: "10px", fontFamily: "'Jersey 15', serif" }}>1. Select Pet Type</h3>
+            <div style={{ display: "flex", gap: "10px" }}>
+              {Object.entries(petData).map(([key, data]) => (
+                <button
+                  key={key}
+                  onClick={() => handleTypeSelect(key)}
+                  style={{
+                    flex: 1,
+                    padding: "15px",
+                    border: selectedType === key ? "2px solid #4E56C0" : "1px solid #ccc",
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    backgroundColor: selectedType === key ? "#f0f2fc" : "#fff",
+                    transition: "all 0.2s",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "10px"
+                  }}
+                >
+                  <img src={imageMap[data.image]} alt={data.name} style={{ width: "50px", height: "50px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }} />
+                  <span style={{ fontWeight: "bold", color: "#4E56C0", fontFamily: "'Jersey 15', serif", fontSize: "18px" }}>{data.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 2. Select Breed */}
+          {selectedType && (
+            <div style={{ marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "18px", color: "#4E56C0", marginBottom: "10px", fontFamily: "'Jersey 15', serif" }}>2. Select Breed</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+                <select
+                  value={selectedBreed}
+                  onChange={(e) => setSelectedBreed(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    fontSize: "16px",
+                    border: "2px solid #4E56C0",
+                    borderRadius: "12px",
+                    backgroundColor: "#fff",
+                    color: "#4E56C0",
+                    fontFamily: "'Jersey 15', serif",
+                    boxSizing: "border-box"
+                  }}
+                >
+                  <option value="" disabled>Choose a breed...</option>
+                  {petData[selectedType].breeds.map((breed) => (
+                    <option key={breed.name} value={breed.name}>{breed.name}</option>
+                  ))}
+                </select>
+                {currentBreedImage && (
+                  <img 
+                    src={imageMap[currentBreedImage]}
+                    alt="Preview" 
+                    style={{ width: "80px", height: "80px", objectFit: "contain", marginTop: "10px" }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                )}
               </div>
             </div>
-            <button
-              onClick={() => removePet(pet.id)}
-              style={{
-                backgroundColor: "#f44336",
-                color: "#fff",
-                border: "none",
-                padding: "6px 14px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontWeight: "bold",
-                fontSize: "14px",
-                transition: "background 0.2s"
-              }}
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+          )}
+
+          {/* Add Pet Button */}
+          <button
+            onClick={selectPet}
+            disabled={!selectedType || !selectedBreed || hasPet}
+            style={{
+              width: "100%",
+              padding: "12px",
+              fontSize: "18px",
+              border: "none",
+              borderRadius: "999px",
+              backgroundColor: (!selectedType || !selectedBreed || hasPet) ? "#ccc" : "#4E56C0",
+              color: "#fff",
+              fontWeight: "bold",
+              cursor: (!selectedType || !selectedBreed || hasPet) ? "not-allowed" : "pointer",
+              fontFamily: "'Jersey 15', serif",
+              transition: "background 0.2s"
+            }}
+          >
+            Adopt Companion
+          </button>
+        </>
+      )}
     </div>
   );
 }
