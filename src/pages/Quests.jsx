@@ -21,7 +21,7 @@ const nxt = (s) => {
   return s;
 };
 
-// Milestone rewards (NO per-task rewards)
+// Milestone rewards
 const DAILY_MILESTONE_COINS = 50;
 const DAILY_MILESTONE_XP = 75;
 const WEEKLY_MILESTONE_COINS = 200;
@@ -48,15 +48,27 @@ function TodoCalendarWithQuests({ currentUser }) {
   const [rewardNotification, setRewardNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processingTasks, setProcessingTasks] = useState(new Set());
+  const [showTutorial, setShowTutorial] = useState(false);
   
   // Track claimed milestones
   const [claimedDailyMilestone, setClaimedDailyMilestone] = useState(false);
   const [claimedWeeklyMilestone, setClaimedWeeklyMilestone] = useState(false);
 
+  // Show tutorial on first visit
+  useEffect(() => {
+    const tutorialShown = localStorage.getItem("task_tutorial_shown");
+    if (!tutorialShown) {
+      setShowTutorial(true);
+      setTimeout(() => {
+        setShowTutorial(false);
+        localStorage.setItem("task_tutorial_shown", "true");
+      }, 5000);
+    }
+  }, []);
+
   const updateUserRewards = async (coinsEarned, xpEarned, message, isMilestone = false) => {
     console.log(`📊 GIVING REWARDS: +${coinsEarned} coins, +${xpEarned} XP`);
     
-    // Update backend coins
     if (currentUser?.id && coinsEarned > 0) {
       try {
         await fetch(`${API_BASE}/users/${currentUser.id}/coins`, {
@@ -70,7 +82,6 @@ function TodoCalendarWithQuests({ currentUser }) {
       }
     }
     
-    // Also update localStorage for immediate display
     const savedUser = localStorage.getItem("user_data");
     let user = { coins: 0, xp: 0 };
     
@@ -113,13 +124,11 @@ function TodoCalendarWithQuests({ currentUser }) {
   const checkAndAwardMilestones = (updatedTasks) => {
     console.log("🔍 Checking milestones...");
     
-    // Daily milestone - compare by date string (YYYY-MM-DD)
     const todayTasks = updatedTasks.filter(t => {
       const taskDate = t.deadline ? t.deadline.split('T')[0] : t.deadline;
       return taskDate === todayStr && t.status === "completed";
     });
     const dailyCompleted = todayTasks.length;
-    console.log(`📅 Daily completed: ${dailyCompleted}/5, claimed: ${claimedDailyMilestone}`);
     
     if (dailyCompleted >= 5 && !claimedDailyMilestone) {
       console.log("🎯 DAILY MILESTONE REACHED!");
@@ -134,7 +143,6 @@ function TodoCalendarWithQuests({ currentUser }) {
       return true;
     }
     
-    // Weekly milestone - compare Date objects
     const weekStart = getWeekStart(today);
     const weekEnd = getWeekEnd(today);
     const weekTasks = updatedTasks.filter(t => {
@@ -143,7 +151,6 @@ function TodoCalendarWithQuests({ currentUser }) {
       return taskDate >= weekStart && taskDate <= weekEnd;
     });
     const weeklyCompleted = weekTasks.length;
-    console.log(`📆 Weekly completed: ${weeklyCompleted}/20, claimed: ${claimedWeeklyMilestone}`);
     
     if (weeklyCompleted >= 20 && !claimedWeeklyMilestone) {
       console.log("🏆 WEEKLY MILESTONE REACHED!");
@@ -178,7 +185,6 @@ function TodoCalendarWithQuests({ currentUser }) {
     return [];
   };
 
-  // Load events from backend
   const loadEventsFromBackend = async () => {
     if (!currentUser?.id) return [];
     try {
@@ -195,7 +201,6 @@ function TodoCalendarWithQuests({ currentUser }) {
     return [];
   };
 
-  // Save task to backend
   const saveTaskToBackend = async (task) => {
     if (!currentUser?.id) return null;
     try {
@@ -215,7 +220,6 @@ function TodoCalendarWithQuests({ currentUser }) {
     return null;
   };
 
-  // Update task status in backend
   const updateTaskStatusInBackend = async (taskId, status) => {
     try {
       const res = await fetch(`${API_BASE}/tasks/${taskId}/status`, {
@@ -230,7 +234,6 @@ function TodoCalendarWithQuests({ currentUser }) {
     }
   };
 
-  // Delete task from backend
   const deleteTaskFromBackend = async (taskId) => {
     try {
       const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
@@ -243,7 +246,6 @@ function TodoCalendarWithQuests({ currentUser }) {
     }
   };
 
-  // Save event to backend
   const saveEventToBackend = async (event) => {
     if (!currentUser?.id) return null;
     try {
@@ -268,7 +270,6 @@ function TodoCalendarWithQuests({ currentUser }) {
     return null;
   };
 
-  // Delete event from backend
   const deleteEventFromBackend = async (eventId) => {
     try {
       const res = await fetch(`${API_BASE}/events/${eventId}`, {
@@ -325,7 +326,6 @@ function TodoCalendarWithQuests({ currentUser }) {
         localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0 }));
       }
       
-      // Load milestone claim states
       const savedDailyDate = localStorage.getItem("claimed_daily_date");
       const todayDate = new Date().toDateString();
       
@@ -506,14 +506,12 @@ function TodoCalendarWithQuests({ currentUser }) {
   );
 
   const quests = useMemo(() => {
-    // Daily quest - count completed tasks with today's date
     const todayTasks = tasks.filter(t => {
       const taskDate = t.deadline ? t.deadline.split('T')[0] : t.deadline;
       return taskDate === todayStr && t.status === "completed";
     });
     const dailyDone = todayTasks.length;
 
-    // Weekly quest - count completed tasks within current week
     const weekStart = getWeekStart(today);
     const weekEnd = getWeekEnd(today);
     const weekTasks = tasks.filter(t => {
@@ -533,10 +531,25 @@ function TodoCalendarWithQuests({ currentUser }) {
   const firstDayWeekday = days[0]?.getDay() || 0;
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+  // Helper to get progress percentage for task
+  const getTaskProgress = (status) => {
+    if (status === "completed") return 100;
+    if (status === "in progress") return 50;
+    return 0;
+  };
+
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="quests-root">
+      {/* Tutorial Help Tip */}
+      {showTutorial && (
+        <div className="help-tip">
+          💡 <strong>How to use tasks:</strong> Click the "Start Task" or "Mark Complete" buttons to change task status. 
+          Complete tasks to earn coins and XP! 🎉
+        </div>
+      )}
+
       {rewardNotification && (
         <div className={`reward-toast ${rewardNotification.isMilestone ? 'milestone' : ''}`}>
           <div className="reward-toast-icon">
@@ -549,8 +562,19 @@ function TodoCalendarWithQuests({ currentUser }) {
             </div>
           </div>
         </div>
+        
       )}
+      {/* Permanent Instructions Box */}
+      <div className="instructions-permanent">
+        <div className="instructions-permanent-header">
+          <span>📋 How to use tasks</span>
+        </div>
+        <div className="instructions-permanent-content">
+          <span>① Add a task → ② Click <strong>Start Task</strong> → ③ Click <strong>Mark Complete</strong> → 🎉 Get rewards!</span>
+        </div>
+      </div>
       
+      {/* Main Quests Card */}
       <div className="quests-card">
         <div className="quests-header">
           <span className="quests-title">🍅 Quests & Tasks</span>
@@ -577,25 +601,68 @@ function TodoCalendarWithQuests({ currentUser }) {
             {!(tasksByDate[todayStr]?.length || eventsByDate[todayStr]?.length) && (
               <div className="empty-state">✨ No tasks or events today</div>
             )}
+            
+            {/* Enhanced Task Items with Buttons */}
             {(tasksByDate[todayStr] || []).map((task) => (
-              <div key={task.id} className="task-item">
-                <div className={`task-status-dot status-${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`} />
-                <span onClick={() => toggleStatus(task)} className={`task-name ${task.status === "completed" ? "completed" : ""}`} style={{ cursor: "pointer" }}>
-                  {task.name}
-                </span>
-                <span className={`status-badge ${task.status === "uncompleted" ? "uncompleted" : task.status === "in progress" ? "in-progress" : "completed"}`}>
-                  {task.status}
-                </span>
+              <div key={task.id} className="task-item-enhanced">
+                <div className="task-info">
+                  <div className="task-name">{task.name}</div>
+                  <div className="task-deadline">📅 Deadline: {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</div>
+                  
+                  {/* Progress Bar */}
+                  <div className="task-progress">
+                    <div className="step-labels">
+                      <span>Not Started</span>
+                      <span>In Progress</span>
+                      <span>Completed</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="task-status-control">
+                  {task.status === "uncompleted" && (
+                    <div className="status-section">
+                      <span className="status-label status-uncompleted-label">📋 Not Started</span>
+                      <button 
+                        className="action-btn start-btn"
+                        onClick={() => toggleStatus(task)}
+                      >
+                        Start Task →
+                      </button>
+                    </div>
+                  )}
+                  
+                  {task.status === "in progress" && (
+                    <div className="status-section">
+                      <span className="status-label status-progress-label">⚡ In Progress</span>
+                      <button 
+                        className="action-btn complete-btn"
+                        onClick={() => toggleStatus(task)}
+                      >
+                        ✓ Mark Complete
+                      </button>
+                    </div>
+                  )}
+                  
+                  {task.status === "completed" && (
+                    <div className="status-section">
+                      <span className="status-label status-completed-label">✅ Completed!</span>
+                    </div>
+                  )}
+                </div>
+                
                 <button 
-                  className="delete-btn" 
+                  className="delete-task-btn" 
                   onClick={() => deleteTask(task.id)}
                   disabled={task.status === "completed"}
-                  style={{ opacity: task.status === "completed" ? 0.5 : 1, cursor: task.status === "completed" ? "not-allowed" : "pointer" }}
+                  style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
                 >
-                  ×
+                  🗑️
                 </button>
               </div>
             ))}
+            
+            {/* Events remain the same */}
             {(eventsByDate[todayStr] || []).map((ev) => (
               <div key={ev.id} className="event-item">
                 <div className="task-status-dot" style={{ background: "#4E56C0" }} />
@@ -625,64 +692,73 @@ function TodoCalendarWithQuests({ currentUser }) {
               <button className="quest-btn" onClick={addEvent}>Add Event</button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="add-section">
-            <div className="calendar-header">
-              <button className="calendar-nav-btn" onClick={goToPreviousMonth}>←</button>
-              <div className="add-title" style={{ cursor: "pointer" }} onClick={goToCurrentMonth}>
-                📆 {monthNames[currentMonth]} {currentYear}
-              </div>
-              <button className="calendar-nav-btn" onClick={goToNextMonth}>→</button>
-            </div>
-            <div className="calendar-grid">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                <div key={d} className="calendar-day-header">{d}</div>
-              ))}
-              {Array(firstDayWeekday).fill(null).map((_, i) => <div key={`empty-${i}`} className="calendar-empty" />)}
-              {days.map((day) => {
-                const dateStr = day.toISOString().split("T")[0];
-                const isToday = dateStr === todayStr;
-                const dayTasks = tasksByDate[dateStr] || [];
-                const dayEvents = eventsByDate[dateStr] || [];
-                const totalItems = dayTasks.length + dayEvents.length;
-                const hasMore = totalItems > 2;
-                
-                return (
-                  <div key={dateStr} className={`calendar-cell ${isToday ? "today" : ""}`}>
-                    <div className="calendar-date">{day.getDate()}</div>
-                    <div className="calendar-tasks-list">
-                      {dayTasks.slice(0, 2).map((task) => (
-                        <div key={task.id} className="calendar-chip chip-task" style={{ background: sBg(task.status), color: sTx(task.status), cursor: "pointer" }} onClick={() => toggleStatus(task)}>
-                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{task.name}</span>
-                          <button 
-                            className="chip-delete" 
-                            onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
-                            disabled={task.status === "completed"}
-                            style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                      {dayEvents.slice(0, 1).map((ev) => (
-                        <div key={ev.id} className="calendar-chip chip-event" onClick={() => setSelectedEvent(ev)} style={{ cursor: "pointer" }}>
-                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{ev.title}</span>
-                          <button className="chip-delete" onClick={(e) => { e.stopPropagation(); deleteEvent(ev.id); }}>×</button>
-                        </div>
-                      ))}
-                      {hasMore && (
+      {/* Separate Wider Calendar Box */}
+      <div className="calendar-wrapper">
+        <div className="calendar-header">
+          <div className="calendar-title">
+            <span>📅</span>
+            <span>Calendar</span>
+          </div>
+          <div className="calendar-nav-group">
+            <button className="calendar-nav-btn" onClick={goToPreviousMonth}>←</button>
+            <span className="calendar-month-year" onClick={goToCurrentMonth}>
+              {monthNames[currentMonth]} {currentYear}
+            </span>
+            <button className="calendar-nav-btn" onClick={goToNextMonth}>→</button>
+          </div>
+        </div>
+        <div className="calendar-container">
+          <div className="calendar-grid">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+              <div key={d} className="calendar-day-header">{d}</div>
+            ))}
+            {Array(firstDayWeekday).fill(null).map((_, i) => <div key={`empty-${i}`} className="calendar-empty" />)}
+            {days.map((day) => {
+              const dateStr = day.toISOString().split("T")[0];
+              const isToday = dateStr === todayStr;
+              const dayTasks = tasksByDate[dateStr] || [];
+              const dayEvents = eventsByDate[dateStr] || [];
+              const totalItems = dayTasks.length + dayEvents.length;
+              const hasMore = totalItems > 2;
+              
+              return (
+                <div key={dateStr} className={`calendar-cell ${isToday ? "today" : ""}`}>
+                  <div className="calendar-date">{day.getDate()}</div>
+                  <div className="calendar-tasks-list">
+                    {dayTasks.slice(0, 2).map((task) => (
+                      <div key={task.id} className="calendar-chip chip-task" style={{ background: sBg(task.status), color: sTx(task.status), cursor: "pointer" }} onClick={() => toggleStatus(task)}>
+                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{task.name}</span>
                         <button 
-                          className="view-all-btn"
-                          onClick={() => setSelectedDayDetails({ date: dateStr, tasks: dayTasks, events: dayEvents })}
+                          className="chip-delete" 
+                          onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
+                          disabled={task.status === "completed"}
+                          style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
                         >
-                          📋 View all ({totalItems})
+                          ×
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    ))}
+                    {dayEvents.slice(0, 1).map((ev) => (
+                      <div key={ev.id} className="calendar-chip chip-event" onClick={() => setSelectedEvent(ev)} style={{ cursor: "pointer" }}>
+                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px" }}>{ev.title}</span>
+                        <button className="chip-delete" onClick={(e) => { e.stopPropagation(); deleteEvent(ev.id); }}>×</button>
+                      </div>
+                    ))}
+                    {hasMore && (
+                      <button 
+                        className="view-all-btn"
+                        onClick={() => setSelectedDayDetails({ date: dateStr, tasks: dayTasks, events: dayEvents })}
+                      >
+                        📋 View all ({totalItems})
+                      </button>
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
