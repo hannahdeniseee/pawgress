@@ -33,52 +33,6 @@ export function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
-// Note frequencies (Hz)
-const NOTE = {
-  G4: 392.00,
-  A4: 440.00, B4: 493.88,
-  "C#5": 554.37, D5: 587.33, E5: 659.25, "F#5": 739.99,
-  C5: 523.25,
-};
-
-function chime(type = "focus") {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return;
-  const ctx = new AudioContext();
-
-  // D F# D E D B D C# A C# B G... 8-bit session completion jingle
-  const focusMelody = [
-    NOTE.D5, null, NOTE["F#5"], NOTE.D5, NOTE.E5,
-    NOTE.D5, NOTE.B4,    NOTE.D5, null, NOTE["C#5"],
-    NOTE.A4, NOTE["C#5"], null, NOTE.B4, NOTE.G4,
-  ];
-  const breakMelody = [NOTE.C5, NOTE.B4, NOTE.A4];
-  const melody = type === "focus" ? focusMelody : breakMelody;
-
-  // 8-bit feel: square wave, short punchy notes with a hard cut-off
-  const noteDuration = 0.08;  // how long each note sounds
-  const noteSpacing  = 0.08;  // gap between note starts
-
-  melody.forEach((freq, i) => {
-    const osc  = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.type = "square";           // ← 8-bit square wave
-    osc.frequency.value = freq;
-
-    if (freq === null) return;
-
-    const t = ctx.currentTime + i * noteSpacing;
-    gain.gain.setValueAtTime(0.18, t);                        // instant on
-    gain.gain.setValueAtTime(0.18, t + noteDuration * 0.75); // hold
-    gain.gain.linearRampToValueAtTime(0, t + noteDuration);  // quick fade
-
-    osc.start(t);
-    osc.stop(t + noteDuration + 0.01);
-  });
-}
 
 export default function PomodoroTimer({ user }) {
   const [mode, setMode] = useState("focus");
@@ -94,9 +48,19 @@ export default function PomodoroTimer({ user }) {
   const [sessionsToday, setSessionsToday] = useState(0);
   const [notification, setNotification] = useState(null);
   const [tomatoBounce, setTomatoBounce] = useState(false);
+  const [warningActive, setWarningActive] = useState(false);
 
-  const intervalRef = useRef(null);
+  const intervalRef    = useRef(null);
   const totalSecondsRef = useRef(DEFAULT_FOCUS * 60);
+  const jingleRef      = useRef(null);   // the Audio element
+  const jinglePlayedRef = useRef(false); // guard: only play once per session
+
+  // Lazily create the Audio object once so the browser can preload it
+  if (!jingleRef.current) {
+    jingleRef.current = new Audio("/timer-jingle.wav");
+    jingleRef.current.preload = "auto";
+    jingleRef.current.volume = 0.4;
+  }
 
   const getDuration = useCallback((m) => {
     if (m === "focus") return focusMins * 60;
@@ -112,6 +76,8 @@ export default function PomodoroTimer({ user }) {
     totalSecondsRef.current = dur;
     setSecondsLeft(dur);
     setNotification(null);
+    jinglePlayedRef.current = false;
+    setWarningActive(false);
   }
 
   function handleStartPause() {
@@ -119,6 +85,12 @@ export default function PomodoroTimer({ user }) {
       clearInterval(intervalRef.current);
       setRunning(false);
     } else {
+      if (secondsLeft === 0) {
+        // Restart: reset to the full chosen duration before starting
+        const dur = getDuration(mode);
+        totalSecondsRef.current = dur;
+        setSecondsLeft(dur);
+      }
       setTomatoBounce(true);
       setTimeout(() => setTomatoBounce(false), 600);
       setRunning(true);
@@ -132,6 +104,8 @@ export default function PomodoroTimer({ user }) {
     totalSecondsRef.current = dur;
     setSecondsLeft(dur);
     setNotification(null);
+    jinglePlayedRef.current = false;
+    setWarningActive(false);
   }
 
   useEffect(() => {
@@ -150,8 +124,35 @@ export default function PomodoroTimer({ user }) {
     return () => clearInterval(intervalRef.current);
   }, [running, mode, focusMins]);
 
+  // Sync warning state to body class so Navbar.css can react to it
+  useEffect(() => {
+    if (warningActive) {
+      document.body.classList.add('pomo-warning');
+    } else {
+      document.body.classList.remove('pomo-warning');
+    }
+    return () => document.body.classList.remove('pomo-warning');
+  }, [warningActive]);
+
+  // Dedicated effect for audio + warning triggers — watches secondsLeft directly
+  useEffect(() => {
+    if (!running || mode !== "focus") return;
+
+    // 🎵 Audio at 15 s (useEffect fires after render, equivalent to updater at prev===16)
+    if (secondsLeft === 15 && !jinglePlayedRef.current) {
+      jinglePlayedRef.current = true;
+      jingleRef.current.currentTime = 0;
+      jingleRef.current.play().catch(() => {});
+    }
+
+    // 🟠 Warning aesthetic at 15 s
+    if (secondsLeft === 15) {
+      setWarningActive(true);
+    }
+  }, [secondsLeft, running, mode]);
+
   function handleComplete() {
-    chime(mode);
+    setWarningActive(false);
     setTomatoBounce(true);
     setTimeout(() => setTomatoBounce(false), 600);
     if (mode === "focus") {
@@ -205,12 +206,13 @@ export default function PomodoroTimer({ user }) {
     short:  { accent: "#56A0C0", bg: "#EDF6FC", tab: "#88B8D8" },
     long:   { accent: "#8B56C0", bg: "#F2EEFC", tab: "#B088D8" },
   };
-  const col = modeColors[mode];
+  const warningColors = { accent: "#C05A1A", bg: "#fff4ec", tab: "#e07a3a" };
+  const col = (warningActive && mode === "focus") ? warningColors : modeColors[mode];
 
   const modeLabel = mode === "focus" ? "Focus Session" : mode === "short" ? "Take a breather!" : "Some you time.";
 
   return (
-    <div className="pomo-root" style={{ "--accent": col.accent, "--bg-tint": col.bg, "--tab-active": col.tab }}>
+    <div className={`pomo-root${warningActive ? " warning" : ""}`} style={{ "--accent": col.accent, "--bg-tint": col.bg, "--tab-active": col.tab }}>
       {/* Main Card */}
       <div className="pomo-card">
         {/* Header */}
@@ -267,7 +269,7 @@ export default function PomodoroTimer({ user }) {
               <div className={`tomato-emoji ${tomatoBounce ? "bounce" : ""} ${running ? "wiggle" : ""}`}>
                 🍅
               </div>
-              <div className="timer-digits">{formatTime(secondsLeft)}</div>
+              <div className={`timer-digits${warningActive ? " warning" : ""}`}>{formatTime(secondsLeft)}</div>
               <div className="mode-label">{modeLabel}</div>
             </div>
           </div>
@@ -282,7 +284,7 @@ export default function PomodoroTimer({ user }) {
           {/* Controls */}
           <div className="controls">
             <button className="pomo-btn primary" onClick={handleStartPause}>
-              {running ? "⏸ Pause" : secondsLeft < total ? "▶ Resume Timer" : "▶ Start Timer"}
+              {running ? "⏸ Pause" : secondsLeft === 0 ? "▶ Restart Timer" : secondsLeft < total ? "▶ Resume Timer" : "▶ Start Timer"}
             </button>
             <button className="pomo-btn ghost" onClick={handleCancel}>
               ✕ Cancel
