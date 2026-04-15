@@ -358,7 +358,7 @@ app.delete("/api/tasks/:id", async (req, res) => {
 
 // Create a new event
 app.post("/api/users/:id/events", async (req, res) => {
-  const { title, date, time, venue } = req.body;
+  const { title, date, time, venue, topics } = req.body;
 
   if (!title || !date) {
     return res.status(400).json({ error: "Title and date are required" });
@@ -372,6 +372,7 @@ app.post("/api/users/:id/events", async (req, res) => {
         date: new Date(date),
         time,
         venue,
+        topics,
       },
     });
     res.json(event);

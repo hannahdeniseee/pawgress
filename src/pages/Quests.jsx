@@ -31,7 +31,8 @@ const API_BASE = "http://localhost:5000/api";
 
 function TodoCalendarWithQuests({ currentUser }) {
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toLocaleDateString('en-CA');
 
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -498,7 +499,7 @@ function TodoCalendarWithQuests({ currentUser }) {
 
   const eventsByDate = useMemo(() =>
     events.reduce((acc, e) => { 
-      const eventDate = e.date ? e.date.split('T')[0] : e.date;
+      const eventDate = e.date.split('T')[0];
       (acc[eventDate] ??= []).push(e);
       return acc; 
     }, {}),
@@ -717,7 +718,7 @@ function TodoCalendarWithQuests({ currentUser }) {
             ))}
             {Array(firstDayWeekday).fill(null).map((_, i) => <div key={`empty-${i}`} className="calendar-empty" />)}
             {days.map((day) => {
-              const dateStr = day.toISOString().split("T")[0];
+              const dateStr = day.toLocaleDateString('en-CA');
               const isToday = dateStr === todayStr;
               const dayTasks = tasksByDate[dateStr] || [];
               const dayEvents = eventsByDate[dateStr] || [];
@@ -771,9 +772,19 @@ function TodoCalendarWithQuests({ currentUser }) {
               <button className="modal-close" onClick={() => setSelectedEvent(null)}>×</button>
             </div>
             <div className="modal-body">
-              <p><strong>📅 Date:</strong> {selectedEvent.date}</p>
+            <p><strong>📅 Date:</strong> {selectedEvent.date}</p>
+
+            {selectedEvent.title.includes("Study Session") ? (
+              <p>
+                <strong>📝 Topics:</strong>{" "}
+                {selectedEvent.topics || "Not specified"}
+              </p>
+            ) : (
+            <>
               <p><strong>⏰ Time:</strong> {selectedEvent.time || "Not specified"}</p>
               <p><strong>📍 Venue:</strong> {selectedEvent.venue || "Not specified"}</p>
+            </>
+            )}
             </div>
           </div>
         </div>

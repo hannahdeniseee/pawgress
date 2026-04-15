@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "../styles/StudyPlanner.css";
 
 export default function StudyPlan({ onPlanCreated }) {
   const API_BASE = "http://localhost:5000/api";
@@ -7,10 +8,14 @@ export default function StudyPlan({ onPlanCreated }) {
   const [examDate, setExamDate] = useState("");
   const [studyMode, setStudyMode] = useState("auto");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [subject, setSubject] = useState("");
+  const [topics, setTopics] = useState("");
 
   const generateStudyDates = (examDate) => {
     const today = new Date();
-    const exam = new Date(examDate);
+    today.setHours(0, 0, 0, 0);
+    const [year, month, day] = examDate.split('-').map(Number);
+    const exam = new Date(year, month - 1, day);
     const dates = [];
 
     let fib = [1, 2];
@@ -36,7 +41,7 @@ export default function StudyPlan({ onPlanCreated }) {
     return dates;
   };
 
-  const generatePlan = async () => {
+  const generatePlan = async (event) => {
     if (!examDate) return;
 
     let dates = [];
@@ -47,15 +52,23 @@ export default function StudyPlan({ onPlanCreated }) {
       dates = selectedDates.map((d) => new Date(d));
     }
 
+    const topicsArray = topics
+      .split(",")
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+
     try {
       await Promise.all(
         dates.map((date) =>
-          fetch(`${API_BASE}/users/${userId}/tasks`, {
+          fetch(`${API_BASE}/users/${userId}/events`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              name: "Study Session",
-              deadline: date.toISOString().split("T")[0],
+              title: `${subject} Study Session`,
+              date: date.toLocaleDateString('en-CA'),
+              time: "",
+              venue: "",
+              topics: topicsArray.join(", "),
             }),
           })
         )
@@ -65,10 +78,12 @@ export default function StudyPlan({ onPlanCreated }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: "📌 Exam Date",
+          name: `📌 ${subject} Exam Date`,
           deadline: examDate,
         }),
       });
+
+      //await fetch
 
       alert("Study plan created!");
 
@@ -80,42 +95,62 @@ export default function StudyPlan({ onPlanCreated }) {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Study Plan Maker</h2>
-
-      <div style={{ marginBottom: 10 }}>
-        <label>Exam Date: </label>
-        <input
-          type="date"
-          value={examDate}
-          onChange={(e) => setExamDate(e.target.value)}
-        />
+    <div className="study-container">
+      <div className="study-header">
+        <p className="study-title">📖 Study Plan Maker</p>
       </div>
 
-      <div style={{ marginBottom: 10 }}>
-        <label>Mode: </label>
-        <select
-          value={studyMode}
-          onChange={(e) => setStudyMode(e.target.value)}
-        >
-          <option value="auto">Auto (Fibonacci)</option>
-          <option value="manual">Manual</option>
-        </select>
-      </div>
-
-      {studyMode === "manual" && (
-        <div style={{ marginBottom: 10 }}>
-          <label>Add Study Date: </label>
+      <div className="study-content">
+        <div className="input-group">
+          <label>Exam Date: </label>
           <input
             type="date"
-            onChange={(e) =>
-              setSelectedDates((prev) => [...prev, e.target.value])
-            }
+            value={examDate}
+            onChange={(e) => setExamDate(e.target.value)}
           />
         </div>
-      )}
 
-      <button onClick={generatePlan}>
+        <div className="input-group">
+          <label>Mode: </label>
+          <select
+            value={studyMode}
+            onChange={(e) => setStudyMode(e.target.value)}
+          >
+            <option value="auto">Auto (Fibonacci)</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+
+        <div className="input-group">
+          <label>Subject: </label>
+          <input
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
+        </div>
+
+        <div className="input-group">
+          <label>Topics: </label>
+          <textArea
+            value={topics}
+            onChange={(e) => setTopics(e.target.value)}
+          />
+        </div>
+
+        {studyMode === "manual" && (
+          <div style={{ marginBottom: 10 }}>
+            <label>Add Study Date: </label>
+            <input
+              type="date"
+              onChange={(e) =>
+                setSelectedDates((prev) => [...prev, e.target.value])
+              }
+            />
+          </div>
+      )}
+      </div>
+
+      <button onClick={generatePlan} className="submit-btn">
         Generate Study Plan
       </button>
     </div>
