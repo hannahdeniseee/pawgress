@@ -22,9 +22,11 @@
 
 /* Main Card */
 .pomo-card {
+  position: relative;
+  z-index: 1;
   width: 500px;
   max-width: 90vw;
-  margin: 0 auto;  
+  margin: 0 auto;
   background: white;
   border: 2.5px solid #4E56C0;
   border-radius: 20px;
@@ -180,7 +182,7 @@
 .timer-digits {
   font-family: "Jersey 15", serif;
   font-size: 3rem;
-  color: #4E56C0;
+  color: var(--accent);
   letter-spacing: 2px;
   line-height: 1.2;
 }
@@ -416,19 +418,6 @@
 }
 
 /* Warning State (last 15 seconds) */
-.pomo-root::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(192, 90, 26, 0);
-  pointer-events: none;
-  z-index: 0;
-  transition: background 0.6s ease;
-}
-.pomo-root.warning::before {
-  background: rgba(192, 90, 26, 0.18);
-}
-
 .pomo-card {
   transition: border-color 0.6s ease;
 }
@@ -467,6 +456,34 @@
   border-color: #C05A1A;
 }
 .pomo-root.warning .pomo-btn.ghost  { color: #C05A1A; border-color: #C05A1A; }
+
+/* ── Short Break Warning (yellow) ─────────────────────────── */
+.pomo-root.short-warning .pomo-card       { border-color: #c49711; }
+.pomo-root.short-warning .pomo-header,
+.pomo-root.short-warning .pomo-tabs       { background: #e2b70d; }
+.pomo-root.short-warning .sessions-badge  { border-color: #c49711; color: #c49711; }
+.pomo-root.short-warning .timer-digits    { color: #c49711; }
+.pomo-root.short-warning .mode-label      { color: #e2b70d; }
+.pomo-root.short-warning .rp-pill         { background: #fffbe6; border-color: #c49711; color: #c49711; }
+.pomo-root.short-warning .pomo-btn.primary {
+  background: linear-gradient(180deg, #f0d878 0%, #e2b70d 100%);
+  border-color: #c49711;
+}
+.pomo-root.short-warning .pomo-btn.ghost  { color: #c49711; border-color: #c49711; }
+
+/* ── Long Break Warning (purple) ──────────────────────────── */
+.pomo-root.long-warning .pomo-card       { border-color: #5E2D9E; }
+.pomo-root.long-warning .pomo-header,
+.pomo-root.long-warning .pomo-tabs       { background: #8B4FCC; }
+.pomo-root.long-warning .sessions-badge  { border-color: #5E2D9E; color: #5E2D9E; }
+.pomo-root.long-warning .timer-digits    { color: #5E2D9E; }
+.pomo-root.long-warning .mode-label      { color: #8B4FCC; }
+.pomo-root.long-warning .rp-pill         { background: #f0eafc; border-color: #5E2D9E; color: #5E2D9E; }
+.pomo-root.long-warning .pomo-btn.primary {
+  background: linear-gradient(180deg, #c9a8f0 0%, #8B4FCC 100%);
+  border-color: #5E2D9E;
+}
+.pomo-root.long-warning .pomo-btn.ghost  { color: #5E2D9E; border-color: #5E2D9E; }
 
 /* Timer digits sway animation */
 @keyframes timerSway {

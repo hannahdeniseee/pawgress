@@ -91,3 +91,21 @@ body.pomo-warning .navbar-tab.active {
   color: #C05A1A;
   border-color: #e07a3a;
 }
+
+body.pomo-short-warning .navbar {
+  background: #e2b70d;
+  box-shadow: 0 2px 12px rgba(160, 120, 0, 0.35);
+}
+body.pomo-short-warning .navbar-tab.active {
+  color: #c49711;
+  border-color: #e2b70d;
+}
+
+body.pomo-long-warning .navbar {
+  background: #8B4FCC;
+  box-shadow: 0 2px 12px rgba(94, 45, 158, 0.35);
+}
+body.pomo-long-warning .navbar-tab.active {
+  color: #5E2D9E;
+  border-color: #8B4FCC;
+}

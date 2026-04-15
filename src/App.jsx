@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { playSelectSfx } from './utils/sfx.js'
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
@@ -15,6 +16,16 @@ import StudyPlanner from './pages/StudyPlanner.jsx';
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
   const [dbUser, setDbUser] = useState(null);
+
+  // Global general-select sound on every button/link that doesn't have its own SFX
+  useEffect(() => {
+    const handler = (e) => {
+      const el = e.target.closest('button, a');
+      if (el && !el.dataset.sfx) playSelectSfx();
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -42,7 +53,7 @@ function AppContent() {
   const currentUser = dbUser || user;
 
   const HomePage = () => (
-    <div style={{ width: '100%', margin: 0, padding: 0 }}>
+    <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
       <PomodoroTimer user={currentUser} />
       
       {/* SelectPet component - it should already have "My Companion" inside it */}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { playSaveSfx } from "../utils/sfx.js";
 import { useNavigate } from 'react-router-dom';
 import "../styles/PetShop.css";
 
@@ -198,9 +199,10 @@ export default function PetAccessoryShop({ userId }) {
                 </div>
 
                 <button
-                  onClick={() => buyItem(item)}
+                  onClick={() => { playSaveSfx(); buyItem(item); }}
                   disabled={purchased || !canAfford}
                   className="shop-button"
+                  data-sfx="custom"
                 >
                   {purchased ? "Owned ✓" : "Buy"}
                 </button>
