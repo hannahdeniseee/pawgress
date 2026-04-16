@@ -1,0 +1,77 @@
+.help-container {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border: 2.5px solid #4E56C0;
+    border-radius: 20px;
+    font-family: 'Jersey 15', serif;
+    width: 50%;
+    margin: 40px auto;
+    overflow: hidden;
+}
+
+.help-header {
+    background: #8890d8;
+    padding: 0px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+}
+
+.help-title {
+    font-size: 28px;
+    color: white;
+    letter-spacing: 0.5px;
+    line-height: 0.5;
+}
+
+.help-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 20px;
+    justify-content: center;
+    background: #f0f2fc;
+}
+
+.help-tabs button {
+    font-family: 'Jersey 15', serif;
+    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 2px solid #8890d8;
+    background: #f0f2fc;
+    color: #4E56C0;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.help-tabs button:hover {
+    transform: scale(1.05);
+    background: #e6e9ff;
+}
+
+.help-tabs .active {
+    background: linear-gradient(180deg, #ADBBFA 0%, #8799ED 100%);
+    color: white;
+    border: 2px solid #4E56C0;
+}
+
+.help-content {
+    padding: 30px;
+}
+
+.help-content h2 {
+    color: #4E56C0;
+    margin-bottom: 10px;
+}
+
+.help-content p {
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+}

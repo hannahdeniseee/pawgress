@@ -10,8 +10,10 @@ import PetShop from './pages/PetShop.jsx'
 import PetCustomization from './pages/PetCustomization.jsx';
 import Navbar from './pages/Navbar.jsx';
 import Quest from "./pages/Quests.jsx";
-import Profile from './pages/Profile.jsx';  // ← ADD THIS IMPORT
+import Profile from './pages/Profile.jsx'; 
 import StudyPlanner from './pages/StudyPlanner.jsx';
+import TutorialHelpButton from "./components/TutorialHelpButton";
+import HelpPage from './pages/HelpPage.jsx';
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -55,6 +57,8 @@ function AppContent() {
   const HomePage = () => (
     <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
       <PomodoroTimer user={currentUser} />
+
+      <TutorialHelpButton />
       
       {/* SelectPet component - it should already have "My Companion" inside it */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -74,6 +78,7 @@ function AppContent() {
         <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/profile" element={dbUser ? <Profile currentUser={dbUser} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />  {/* ← CHANGED from Social to Profile */}
+        <Route path="/help" element={<HelpPage />} />
       </Routes>
     </Router>
   );
