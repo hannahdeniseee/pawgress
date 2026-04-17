@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { playSelectSfx } from './utils/sfx.js'
 import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
@@ -9,12 +10,24 @@ import PetShop from './pages/PetShop.jsx'
 import PetCustomization from './pages/PetCustomization.jsx';
 import Navbar from './pages/Navbar.jsx';
 import Quest from "./pages/Quests.jsx";
-import Profile from './pages/Profile.jsx';  // ← ADD THIS IMPORT
+import Profile from './pages/Profile.jsx'; 
 import StudyPlanner from './pages/StudyPlanner.jsx';
+import TutorialHelpButton from "./components/TutorialHelpButton";
+import HelpPage from './pages/HelpPage.jsx';
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
   const [dbUser, setDbUser] = useState(null);
+
+  // Global general-select sound on every button/link that doesn't have its own SFX
+  useEffect(() => {
+    const handler = (e) => {
+      const el = e.target.closest('button, a');
+      if (el && !el.dataset.sfx) playSelectSfx();
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -42,8 +55,10 @@ function AppContent() {
   const currentUser = dbUser || user;
 
   const HomePage = () => (
-    <div style={{ width: '100%', margin: 0, padding: 0 }}>
+    <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
       <PomodoroTimer user={currentUser} />
+
+      <TutorialHelpButton />
       
       {/* SelectPet component - it should already have "My Companion" inside it */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -63,6 +78,7 @@ function AppContent() {
         <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/profile" element={dbUser ? <Profile currentUser={dbUser} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />  {/* ← CHANGED from Social to Profile */}
+        <Route path="/help" element={<HelpPage />} />
       </Routes>
     </Router>
   );

@@ -10,6 +10,11 @@ body {
   width: 100%;
 }
 
+/* PawBackground handles the background on the Pomodoro page */
+body.pomo-page {
+  background-image: none;
+}
+
 /* Force full width on root */
 html, body, #root {
   width: 100%;

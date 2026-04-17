@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Jersey+15&display=swap');
 
-/* ── Navbar Container ──────────────────────────────────── */
+/* Navbar Container */
 .navbar {
   position: fixed;
   top: 0;
@@ -15,13 +15,14 @@
   font-family: "Jersey 15", serif;
   box-shadow: 0 2px 12px rgba(78, 86, 192, 0.3);
   animation: navSlideDown 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
 }
 @keyframes navSlideDown {
   from { transform: translateY(-100%); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
 
-/* ── Tabs ──────────────────────────────────────────────── */
+/* Tabs */
 .navbar-tabs {
   display: flex;
   gap: 4px;
@@ -49,7 +50,7 @@
   border-bottom: none;
 }
 
-/* ── User Section ──────────────────────────────────────── */
+/* User Section */
 .navbar-user {
   display: flex;
   align-items: center;
@@ -79,4 +80,32 @@
 }
 .navbar-logout:hover {
   background: rgba(255, 255, 255, 0.35);
+}
+
+/* Pomodoro warning state */
+body.pomo-warning .navbar {
+  background: #C05A1A;
+  box-shadow: 0 2px 12px rgba(192, 90, 26, 0.35);
+}
+body.pomo-warning .navbar-tab.active {
+  color: #C05A1A;
+  border-color: #e07a3a;
+}
+
+body.pomo-short-warning .navbar {
+  background: #e2b70d;
+  box-shadow: 0 2px 12px rgba(160, 120, 0, 0.35);
+}
+body.pomo-short-warning .navbar-tab.active {
+  color: #c49711;
+  border-color: #e2b70d;
+}
+
+body.pomo-long-warning .navbar {
+  background: #8B4FCC;
+  box-shadow: 0 2px 12px rgba(94, 45, 158, 0.35);
+}
+body.pomo-long-warning .navbar-tab.active {
+  color: #5E2D9E;
+  border-color: #8B4FCC;
 }

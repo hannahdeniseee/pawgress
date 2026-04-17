@@ -73,6 +73,7 @@ model Event {
   date      DateTime
   time      String?
   venue     String?
+  topics    String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 

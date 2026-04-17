@@ -1,0 +1,47 @@
+/* ── Background container ──────────────────────────────────── */
+.paw-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ── Gradient layers ───────────────────────────────────────── */
+.paw-bg-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.paw-bg-layer.active {
+  opacity: 1;
+}
+
+/* ── Floating elements ─────────────────────────────────────── */
+.paw-bg-el {
+  position: absolute;
+  /* Radial fade: bright centre, soft transparent edge */
+  mask-image: radial-gradient(ellipse 78% 78% at center, white 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 78% 78% at center, white 30%, transparent 100%);
+}
+.paw-bg-el svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Float animations ──────────────────────────────────────── */
+@keyframes pawFloatA {
+  0%,  100% { transform: rotate(var(--rot)) translateY(0px);   }
+  35%        { transform: rotate(var(--rot)) translateY(-9px);  }
+  70%        { transform: rotate(var(--rot)) translateY(5px);   }
+}
+@keyframes pawFloatB {
+  0%,  100% { transform: rotate(var(--rot)) translateY(0px);  }
+  40%        { transform: rotate(var(--rot)) translateY(8px);  }
+  75%        { transform: rotate(var(--rot)) translateY(-7px); }
+}
+
+.paw-bg-el.anim-a { animation: pawFloatA ease-in-out infinite; }
+.paw-bg-el.anim-b { animation: pawFloatB ease-in-out infinite; }
