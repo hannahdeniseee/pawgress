@@ -179,24 +179,6 @@ export default function SelectPet({ currentUser }) {
           }}>
             {pet.type}
           </div>
-          <button
-            onClick={() => removePet(pet.id)}
-            style={{
-              backgroundColor: "#f44336",
-              color: "#fff",
-              border: "none",
-              padding: "8px 20px",
-              borderRadius: "999px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              fontSize: "16px",
-              marginTop: "15px",
-              fontFamily: "'Jersey 15', serif",
-              transition: "background 0.2s"
-            }}
-          >
-            Remove Companion
-          </button>
         </div>
       ))}
 

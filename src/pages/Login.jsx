@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "../styles/Login.css";
 import logo from "../assets/logo.svg";
+import PawBackground from "../components/PawBackground";
 
 function Login(){
   const {
@@ -57,6 +58,7 @@ function Login(){
     </div>
   ) : (
     <>
+      <PawBackground variant="default" />
       {error && <p>Error: {error.message}</p>}
 
     <div className="login-page">

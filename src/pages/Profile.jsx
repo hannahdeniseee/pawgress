@@ -11,6 +11,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import Friends from './Friends.jsx';
+import PawBackground from "../components/PawBackground";
 
 const Profile = ({ currentUser }) => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -97,7 +98,7 @@ const Profile = ({ currentUser }) => {
         <div className="profile-container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
         
         {/* Profile Header */}
-        <div className="profile-header" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '2rem' }}>
+        <div className="profile-header" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '2rem', marginTop: '5rem' }}>
             <img 
             src={profile.avatarUrl || user?.picture || 'https://via.placeholder.com/100'} 
             alt="User Avatar" 
@@ -108,8 +109,6 @@ const Profile = ({ currentUser }) => {
             <p style={{ color: '#666', fontFamily: "'Jersey 15', serif" }}>Joined: {new Date(profile.createdAt).toLocaleDateString()}</p>
             </div>
         </div>
-
-        <hr style={{ border: '1px solid #eee', marginBottom: '2rem' }} />
 
         {/* Rewards Section - 2 cards in one row */}
         <div style={{ marginBottom: '2rem' }}>

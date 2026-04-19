@@ -137,7 +137,6 @@ export default function PetCustomization({ userId }) {
   if (loading) {
     return (
       <div className="customization-page">
-        <Link to="/" className="back-btn">← Back</Link>
         <p>Loading...</p>
       </div>
     );
@@ -150,8 +149,6 @@ export default function PetCustomization({ userId }) {
 
   return (
     <div className="customization-page">
-      <Link to="/" className="back-btn">← Back</Link>
-
       {message && <div className="shop-message">{message}</div>}
 
       <img src={platform} className="platform" alt="Platform" />

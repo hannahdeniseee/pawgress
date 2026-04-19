@@ -83,8 +83,6 @@ export default function StudyPlan({ onPlanCreated }) {
         }),
       });
 
-      //await fetch
-
       alert("Study plan created!");
 
       onPlanCreated?.();

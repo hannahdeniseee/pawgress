@@ -14,6 +14,7 @@ import Profile from './pages/Profile.jsx';
 import StudyPlanner from './pages/StudyPlanner.jsx';
 import TutorialHelpButton from "./components/TutorialHelpButton";
 import HelpPage from './pages/HelpPage.jsx';
+import PawBackground from "./components/PawBackground";
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -55,7 +56,8 @@ function AppContent() {
   const currentUser = dbUser || user;
 
   const HomePage = () => (
-    <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
+    <>
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
       <PomodoroTimer user={currentUser} />
 
       <TutorialHelpButton />
@@ -68,10 +70,12 @@ function AppContent() {
       <Quest currentUser={currentUser} />  
       {dbUser && <StudyPlanner userId={dbUser.id} />}
     </div>
+    </>
   );
 
   return (
     <Router>
+      <PawBackground variant="default" />
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />

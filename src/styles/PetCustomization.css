@@ -4,7 +4,7 @@
 }
 
 .customization-page {
-    background-image: url("website-assets/customization-page.png");
+    /*background-image: url("website-assets/customization-page.png");*/
     background-size: cover; 
     background-position: center;
     background-attachment: fixed;
