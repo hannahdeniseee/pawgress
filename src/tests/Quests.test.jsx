@@ -116,7 +116,7 @@ describe('POST /api/users/:userId/tasks', () => {
     expect(response.body.name).toBe('New Task');
   });
 
-  it('should return 400 if name is missing', async () => {
+  it('should return 200 if name is missing', async () => {
     const response = await request(app)
       .post('/api/users/1/tasks')
       .send({ deadline: '2026-04-20' });
