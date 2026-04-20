@@ -24,15 +24,18 @@ const SHOP_ITEMS = [
   { id: 4, name: "Collar", price: 50, image: collar, slot: "neck" },
 ];
 
+// Map accessory image positions, consistent throughout all 3 pets
 const SLOT_POSITIONS = {
   head: { position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "80px", zIndex: 10 },
   neck: { position: "absolute", top: "57%", left: "50%", transform: "translateX(-50%)", height: "70px", zIndex: 10 },
   face: { position: "absolute", top: "34%", left: "50%", transform: "translateX(-50%)", width: "180px", zIndex: 10 },
 };
 
+// Shop tabs according to the different accessory types
 const SLOTS = [...new Set(SHOP_ITEMS.map(i => i.slot))];
 const TABS = ["All", ...SLOTS.map(s => s.charAt(0).toUpperCase() + s.slice(1))];
 
+// Map source file images
 const petImageMap = {
   "../assets/golden-retriever-dog.svg": goldenDog,
   "../assets/dalmatian-dog.svg": dalmatianDog,
@@ -45,6 +48,19 @@ const petImageMap = {
   "../assets/pink-bird.svg": pinkBird,
 };
 
+// COnstant API link base
+const API_BASE = "http://localhost:5000/api/users";
+
+// Helper function to fetch API calls
+async function apiCall(url, method, body) {
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res;
+}
+
 export default function PetCustomization({ userId }) {
   const [inventory, setInventory] = useState([]);
   const [equipped, setEquipped] = useState({});
@@ -53,55 +69,52 @@ export default function PetCustomization({ userId }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
 
-  const loadUserData = async () => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await fetch(`http://localhost:5000/api/users/${userId}`);
-      const data = await res.json();
-
-      setInventory(data.inventory?.map((a) => a.accessoryId) || []);
-      setEquipped(data.equipped || {});
-      
-      const petImg = data.petImage;
-      if (petImg && petImageMap[petImg]) {
-        setPetImage(petImageMap[petImg]);
-      }
-    } catch (err) {
-      console.error("loadUserData failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Load initial data
   useEffect(() => {
-    loadUserData();
+    if (!userId) { 
+      setLoading(false); return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/${userId}`);
+        const data = await res.json();
+        setInventory(data.inventory?.map((a) => a.accessoryId) || []);
+        setEquipped(data.equipped || {});
+        if (data.petImage && petImageMap[data.petImage]) {
+          setPetImage(petImageMap[data.petImage]);
+        }
+      } catch (err) {
+        console.error("loadUserData failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [userId]);
 
+  // Helper function to list accessories
   function getItem(id) {
     return SHOP_ITEMS.find((i) => i.id === Number(id));
   }
 
+  // Helper function to show feedback pop-ups
   function showMessage(msg) {
     setMessage(msg);
     setTimeout(() => setMessage(""), 2500);
   }
 
+  // Helper function to check if an item is equipped
   function isEquipped(itemId) {
     return Object.values(equipped).includes(itemId);
   }
 
+  // Function to equip an item
   async function equipItem(item) {
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${userId}/equipped`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot: item.slot, accessoryId: item.id }),
+      const res = await apiCall(`${API_BASE}/${userId}/equipped`, "PUT", {
+        slot: item.slot,
+        accessoryId: item.id,
       });
-      
       if (res.ok) {
         setEquipped({ ...equipped, [item.slot]: item.id });
         showMessage(`Equipped ${item.name}!`);
@@ -113,14 +126,12 @@ export default function PetCustomization({ userId }) {
     }
   }
 
+  // Function to unequip an item
   async function unequipItem(item) {
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${userId}/equipped`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot: item.slot }),
+        const res = await apiCall(`${API_BASE}/${userId}/equipped`, "DELETE", {
+        slot: item.slot,
       });
-      
       if (res.ok) {
         const newEquipped = { ...equipped };
         delete newEquipped[item.slot];
@@ -134,15 +145,10 @@ export default function PetCustomization({ userId }) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="customization-page">
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
+  // List owned items
   const ownedItems = inventory.map(getItem).filter(Boolean);
+
+  // List the owned items per shop tab
   const filteredItems = activeTab === "All"
     ? ownedItems
     : ownedItems.filter(item => item.slot.toLowerCase() === activeTab.toLowerCase());
@@ -153,9 +159,11 @@ export default function PetCustomization({ userId }) {
 
       <img src={platform} className="platform" alt="Platform" />
       
+      {/* Pet image */}
       <div className="pet-preview">
-        <img src={petImage} alt="Your pet" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        <img src={petImage} alt="Your pet"/>
 
+        {/* Equipped items */}
         {Object.entries(equipped).map(([slot, itemId]) => {
           const item = getItem(itemId);
           if (!item) return null;
@@ -171,6 +179,7 @@ export default function PetCustomization({ userId }) {
         })}
       </div>
 
+      {/* Inventory tabs */}
       <div className="inventory-picker">
         <div className="filter-tabs">
           {TABS.map(tab => (
@@ -184,6 +193,7 @@ export default function PetCustomization({ userId }) {
           ))}
         </div>
 
+        {/* Inventory content */}
         <div className="inventory-grid">
           {filteredItems.length === 0 && (
             <p className="inventory-empty">
@@ -197,7 +207,7 @@ export default function PetCustomization({ userId }) {
             const alreadyEquipped = isEquipped(item.id);
             return (
               <div key={item.id} className={`inventory-item ${alreadyEquipped ? "equipped" : ""}`}>
-                <img src={item.image} alt={item.name} width={48} height={48} />
+                <img src={item.image} alt={item.name}/>
                 <div className="item-name">{item.name}</div>
                 <button
                   className={`item-btn ${alreadyEquipped ? "unequip" : "equip"}`}
