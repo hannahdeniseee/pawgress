@@ -11,6 +11,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import Friends from './Friends.jsx';
+import PawBackground from "../components/PawBackground";
 
 const Profile = ({ currentUser }) => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -97,7 +98,7 @@ const Profile = ({ currentUser }) => {
         <div className="profile-container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
         
         {/* Profile Header */}
-        <div className="profile-header" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '2rem' }}>
+        <div className="profile-header" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '2rem', marginTop: '5rem' }}>
             <img 
             src={profile.avatarUrl || user?.picture || 'https://via.placeholder.com/100'} 
             alt="User Avatar" 
@@ -108,8 +109,6 @@ const Profile = ({ currentUser }) => {
             <p style={{ color: '#666', fontFamily: "'Jersey 15', serif" }}>Joined: {new Date(profile.createdAt).toLocaleDateString()}</p>
             </div>
         </div>
-
-        <hr style={{ border: '1px solid #eee', marginBottom: '2rem' }} />
 
         {/* Rewards Section - 2 cards in one row */}
         <div style={{ marginBottom: '2rem' }}>
@@ -152,12 +151,8 @@ const Profile = ({ currentUser }) => {
             <h3 style={{ fontFamily: "'Jersey 15', serif", color: '#4E56C0', fontSize: '24px', marginBottom: '1rem' }}>🐾 Your Companion</h3>
             {profile.pet && profile.pet.length > 0 ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', border: '2.5px solid #4E56C0', padding: '1rem', borderRadius: '20px', boxShadow: '0 4px 20px rgba(100, 120, 200, 0.12)' }}>
-                <img 
-                src={profile.pet[0].image} 
-                alt={profile.pet[0].type} 
-                style={{ width: '80px', height: '80px', objectFit: 'contain' }} 
-                />
                 <div>
+                <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '20px', color: '#4E56C0'}}><strong>Name:</strong> {profile.pet[0].name}</p>
                 <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Type:</strong> {profile.pet[0].type}</p>
                 <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Breed:</strong> {profile.pet[0].breed}</p>
                 <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Adopted:</strong> {new Date(profile.pet[0].createdAt).toLocaleDateString()}</p>

@@ -10,8 +10,11 @@ import PetShop from './pages/PetShop.jsx'
 import PetCustomization from './pages/PetCustomization.jsx';
 import Navbar from './pages/Navbar.jsx';
 import Quest from "./pages/Quests.jsx";
-import Profile from './pages/Profile.jsx';  // ← ADD THIS IMPORT
+import Profile from './pages/Profile.jsx'; 
 import StudyPlanner from './pages/StudyPlanner.jsx';
+import TutorialHelpButton from "./components/TutorialHelpButton";
+import HelpPage from './pages/HelpPage.jsx';
+import PawBackground from "./components/PawBackground";
 
 function AppContent() {
   const { isLoading, isAuthenticated, user } = useAuth0();
@@ -53,8 +56,11 @@ function AppContent() {
   const currentUser = dbUser || user;
 
   const HomePage = () => (
-    <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
+    <>
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
       <PomodoroTimer user={currentUser} />
+
+      <TutorialHelpButton />
       
       {/* SelectPet component - it should already have "My Companion" inside it */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -64,16 +70,19 @@ function AppContent() {
       <Quest currentUser={currentUser} />  
       {dbUser && <StudyPlanner userId={dbUser.id} />}
     </div>
+    </>
   );
 
   return (
     <Router>
+      <PawBackground variant="default" />
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/profile" element={dbUser ? <Profile currentUser={dbUser} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />  {/* ← CHANGED from Social to Profile */}
+        <Route path="/help" element={<HelpPage />} />
       </Routes>
     </Router>
   );

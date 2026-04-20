@@ -27,7 +27,7 @@ const Dog = () => (
 
 // Gradient definitions per variant
 const GRADIENTS = {
-  default: "radial-gradient(ellipse at 60% 35%, #e8eaf8 0%, #adb7eb 50%, #8890d8 100%)",
+  default: "radial-gradient(ellipse at 60% 35%, #e8eaf8 0%, #BEDBF4 50%, #96bedf 100%)",
   orange:  "radial-gradient(ellipse at 60% 35%, #FFD0A0 0%, #e8d2b0 55%, #d8bc88 100%)",
   yellow:  "radial-gradient(ellipse at 60% 35%, #FFF8C0 0%, #ececbe 55%, #ebdb82 100%)",
   purple:  "radial-gradient(ellipse at 60% 35%, #EDD8FF 0%, #d4abf3 55%, #b474ec 100%)",

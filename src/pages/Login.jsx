@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "../styles/Login.css";
+import logo from "../assets/logo.svg";
+import PawBackground from "../components/PawBackground";
 
 function Login(){
   const {
@@ -56,10 +58,12 @@ function Login(){
     </div>
   ) : (
     <>
+      <PawBackground variant="default" />
       {error && <p>Error: {error.message}</p>}
 
     <div className="login-page">
-      <div class="button-container">
+      <div className="button-container">
+        <img className="logo" src={logo}></img>
         <button onClick={signup}>Signup</button>
         <button onClick={login}>Login</button>
       </div>

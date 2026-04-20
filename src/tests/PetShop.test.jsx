@@ -4,6 +4,21 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import PetShop from '../pages/PetShop'
 import { MemoryRouter } from 'react-router-dom'
 
+vi.mock('../utils/sfx.js', () => ({
+  playSaveSfx: vi.fn(),
+}))
+
+const localStorageMock = (() => {
+  let store = {}
+  return {
+    getItem: vi.fn((key) => store[key] ?? null),
+    setItem: vi.fn((key, val) => { store[key] = val }),
+    removeItem: vi.fn((key) => { delete store[key] }),
+    clear: vi.fn(() => { store = {} }),
+  }
+})()
+Object.defineProperty(global, 'localStorage', { value: localStorageMock })
+
 const BASE_URL = 'http://localhost:5000'
 
 const mockUser = {
@@ -34,10 +49,12 @@ function renderComponent(props = {}) {
 }
 
 beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
+afterEach(() => {
+    server.resetHandlers()
+    localStorageMock.clear()
+    vi.clearAllMocks()
+})
 afterAll(() => server.close())
-
-// ─── Loading & Display ───────────────────────────────────────────────────────
 
 test('loads and displays coin balance and shop items', async () => {
   renderComponent()

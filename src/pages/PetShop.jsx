@@ -53,7 +53,6 @@ export default function PetAccessoryShop({ userId }) {
           const savedUserData = JSON.parse(localStorage.getItem("user_data") || "{}");
           savedUserData.coins = backendCoins;
           localStorage.setItem("user_data", JSON.stringify(savedUserData));
-          console.log("✅ PetShop synced with backend:", backendCoins);
         }
       } catch (err) {
         console.error("Failed to load from backend:", err);

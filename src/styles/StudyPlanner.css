@@ -1,0 +1,69 @@
+.study-container {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border: 2.5px solid #4E56C0;
+    border-radius: 20px;
+    font-family: 'Jersey 15', serif;
+    width: 50%;
+    margin: 0 auto;
+}
+
+.study-header {
+    background: #8890d8;
+    padding: 0px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+}
+
+.study-title {
+    font-size: 28px;
+    color: white;
+    letter-spacing: 0.5px;
+    line-height: 0.5;
+}
+
+.study-content {
+    margin: 30px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+label {
+    font-size: 20px;
+    color: #4E56C0;
+    letter-spacing: 0.3px;
+}
+
+input, select, textArea {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 2px solid #8890d8;
+    font-family: 'Jersey 15', serif;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s ease;
+    background: #f0f2fc;
+}
+
+.submit-btn {
+    font-size: 16px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    cursor: pointer;
+    background: linear-gradient(180deg, #ADBBFA 0%, #8799ED 100%);
+    color: white;
+    border: 2px solid var(--quest-accent);
+    width: 50%;
+    margin: 0 auto 30px;
+}
