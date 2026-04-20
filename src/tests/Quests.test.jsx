@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll } from "vitest";
+import request from 'supertest';
+import { app, prisma } from '../../backend/index.js';
 import TodoCalendarWithQuests from "../pages/Quests";
 
 vi.mock("../pages/Quests", () => ({
@@ -82,10 +84,6 @@ describe("TodoCalendarWithQuests", () => {
     expect(screen.getByText("←")).toBeInTheDocument();
   });
 });
-
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import request from 'supertest';
-import { app, prisma } from '../../backend/index.js';
 
 describe('GET /api/users/:userId/tasks', () => {
   it('should return 200 and list of tasks', async () => {
