@@ -444,6 +444,7 @@
   transition: background 0.6s ease, border-color 0.6s ease, color 0.6s ease;
 }
 
+/* Pomodoro Timer Warning (orange!) */
 .pomo-root.warning .pomo-card       { border-color: #C05A1A; }
 .pomo-root.warning .pomo-header,
 .pomo-root.warning .pomo-tabs       { background: #e07a3a; }
@@ -457,7 +458,7 @@
 }
 .pomo-root.warning .pomo-btn.ghost  { color: #C05A1A; border-color: #C05A1A; }
 
-/* ── Short Break Warning (yellow) ─────────────────────────── */
+/* Short Break Warning (yellow!) */
 .pomo-root.short-warning .pomo-card       { border-color: #c49711; }
 .pomo-root.short-warning .pomo-header,
 .pomo-root.short-warning .pomo-tabs       { background: #e2b70d; }
@@ -471,7 +472,7 @@
 }
 .pomo-root.short-warning .pomo-btn.ghost  { color: #c49711; border-color: #c49711; }
 
-/* ── Long Break Warning (purple) ──────────────────────────── */
+/* Long Break Warning (purple!) */
 .pomo-root.long-warning .pomo-card       { border-color: #5E2D9E; }
 .pomo-root.long-warning .pomo-header,
 .pomo-root.long-warning .pomo-tabs       { background: #8B4FCC; }
