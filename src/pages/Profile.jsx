@@ -151,12 +151,8 @@ const Profile = ({ currentUser }) => {
             <h3 style={{ fontFamily: "'Jersey 15', serif", color: '#4E56C0', fontSize: '24px', marginBottom: '1rem' }}>🐾 Your Companion</h3>
             {profile.pet && profile.pet.length > 0 ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', border: '2.5px solid #4E56C0', padding: '1rem', borderRadius: '20px', boxShadow: '0 4px 20px rgba(100, 120, 200, 0.12)' }}>
-                <img 
-                src={profile.pet[0].image} 
-                alt={profile.pet[0].type} 
-                style={{ width: '80px', height: '80px', objectFit: 'contain' }} 
-                />
                 <div>
+                <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '20px', color: '#4E56C0'}}><strong>Name:</strong> {profile.pet[0].name}</p>
                 <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Type:</strong> {profile.pet[0].type}</p>
                 <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Breed:</strong> {profile.pet[0].breed}</p>
                 <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Adopted:</strong> {new Date(profile.pet[0].createdAt).toLocaleDateString()}</p>

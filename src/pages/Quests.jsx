@@ -27,6 +27,8 @@ const DAILY_MILESTONE_XP = 75;
 const WEEKLY_MILESTONE_COINS = 200;
 const WEEKLY_MILESTONE_XP = 300;
 
+const TASK_MIN_DURATION_MS = 5 * 60 * 1000;
+
 const API_BASE = "http://localhost:5000/api";
 
 function TodoCalendarWithQuests({ currentUser }) {
@@ -54,6 +56,37 @@ function TodoCalendarWithQuests({ currentUser }) {
   // Track claimed milestones
   const [claimedDailyMilestone, setClaimedDailyMilestone] = useState(false);
   const [claimedWeeklyMilestone, setClaimedWeeklyMilestone] = useState(false);
+
+  // Helpers for timer before task completion
+  const getTaskStartKey = (taskId) => `task_start_${taskId}`;
+
+  const recordTaskStart = (taskId) => {
+    localStorage.setItem(getTaskStartKey(taskId), Date.now().toString());
+  };
+
+  const clearTaskStart = (taskId) => {
+    localStorage.removeItem(getTaskStartKey(taskId));
+  };
+
+  const checkTaskTimer = (taskId) => {
+    const startTime = localStorage.getItem(getTaskStartKey(taskId));
+    if (!startTime) {
+      return { allowed: false, remainingSeconds: Math.ceil(TASK_MIN_DURATION_MS / 1000) };
+    }
+    const elapsed = Date.now() - parseInt(startTime, 10);
+    const remaining = TASK_MIN_DURATION_MS - elapsed;
+    if (remaining <= 0) {
+      return { allowed: true, remainingSeconds: 0 };
+    }
+    return { allowed: false, remainingSeconds: Math.ceil(remaining / 1000) };
+  };
+
+  const formatRemainingTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  };
 
   // Show tutorial on first visit
   useEffect(() => {
@@ -406,19 +439,28 @@ function TodoCalendarWithQuests({ currentUser }) {
       return;
     }
     
-    setProcessingTasks(prev => new Set([...prev, task.id]));
-    
-    try {
-      const next = nxt(task.status);
-      if (next === task.status) {
-        setProcessingTasks(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(task.id);
-          return newSet;
-        });
+    const next = nxt(task.status);
+    if (next === task.status) return;
+
+    if (task.status === "uncompleted" && next === "in progress") {
+      recordTaskStart(task.id);
+    }
+
+    if (task.status === "in progress" && next === "completed") {
+      const { allowed, remainingSeconds } = checkTaskTimer(task.id);
+      if (!allowed) {
+        alert(
+          `Sorry, you cannot immediately mark this task as complete.\n\n` +
+          `Please try again later.\n\n`
+        );
         return;
       }
-      
+      clearTaskStart(task.id);
+    }
+
+    setProcessingTasks(prev => new Set([...prev, task.id]));
+    
+    try {    
       const success = await updateTaskStatusInBackend(task.id, next);
       
       if (success) {
@@ -456,6 +498,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     }
     
     await deleteTaskFromBackend(id);
+    clearTaskStart(id);
     setTasks(prev => prev.filter(t => t.id !== id));
     window.dispatchEvent(new CustomEvent('tasksUpdated'));
   };

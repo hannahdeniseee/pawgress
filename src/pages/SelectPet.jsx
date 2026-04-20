@@ -69,6 +69,7 @@ export default function SelectPet({ currentUser }) {
 
   const [selectedType, setSelectedType] = useState(null);
   const [selectedBreed, setSelectedBreed] = useState("");
+  const [petName, setPetName] = useState(""); 
 
   // Helper to check if the user already has a pet
   const hasPet = pets.length > 0;
@@ -87,6 +88,11 @@ export default function SelectPet({ currentUser }) {
       return;
     }
 
+    if (!petName.trim()) {                                     // ← new validation
+      alert("Please give your companion a name!");
+      return;
+    }
+
     if (selectedType && selectedBreed) {
       const breedInfo = petData[selectedType].breeds.find(b => b.name === selectedBreed);
       try {
@@ -98,6 +104,7 @@ export default function SelectPet({ currentUser }) {
             type: petData[selectedType].name,
             breed: selectedBreed,
             image: breedInfo.image,
+            name: petName.trim(),
           }),
         });
 
@@ -111,6 +118,7 @@ export default function SelectPet({ currentUser }) {
         setPets([newPet]);
         setSelectedType(null);
         setSelectedBreed("");
+        setPetName("");
 
       } catch (err) {
         console.error(err);
@@ -248,6 +256,20 @@ export default function SelectPet({ currentUser }) {
                   />
                 )}
               </div>
+            </div>
+          )}
+
+          {/* 3. Name your pet */}
+          {selectedType && selectedBreed && (
+            <div style={{ marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "18px", color: "#4E56C0", marginBottom: "10px", fontFamily: "'Jersey 15', serif" }}>3. Name Your Companion</h3>
+              <input
+                type="text"
+                placeholder="Enter a name..."
+                value={petName}
+                onChange={(e) => setPetName(e.target.value)}
+                maxLength={30}
+              />
             </div>
           )}
 
