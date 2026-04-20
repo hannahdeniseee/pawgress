@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import "../styles/Quests.css";
 
-// --- HELPERS ---
+
 const getDaysInMonth = (year, month) => {
   const date = new Date(year, month, 1);
   const days = [];
@@ -21,21 +21,17 @@ const nxt = (s) => {
   return s;
 };
 
-// Milestone rewards
 const DAILY_MILESTONE_COINS = 50;
 const DAILY_MILESTONE_XP = 75;
 const WEEKLY_MILESTONE_COINS = 200;
 const WEEKLY_MILESTONE_XP = 300;
-
 const TASK_MIN_DURATION_MS = 5 * 60 * 1000;
-
 const API_BASE = "http://localhost:5000/api";
 
 function TodoCalendarWithQuests({ currentUser }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toLocaleDateString('en-CA');
-
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [tasks, setTasks] = useState([]);
@@ -52,12 +48,8 @@ function TodoCalendarWithQuests({ currentUser }) {
   const [isLoading, setIsLoading] = useState(true);
   const [processingTasks, setProcessingTasks] = useState(new Set());
   const [showTutorial, setShowTutorial] = useState(false);
-  
-  // Track claimed milestones
   const [claimedDailyMilestone, setClaimedDailyMilestone] = useState(false);
   const [claimedWeeklyMilestone, setClaimedWeeklyMilestone] = useState(false);
-
-  // Helpers for timer before task completion
   const getTaskStartKey = (taskId) => `task_start_${taskId}`;
 
   const recordTaskStart = (taskId) => {
@@ -81,14 +73,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     return { allowed: false, remainingSeconds: Math.ceil(remaining / 1000) };
   };
 
-  const formatRemainingTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    if (m > 0) return `${m}m ${s}s`;
-    return `${s}s`;
-  };
-
-  // Show tutorial on first visit
+  // ============ TUTORIAL & INITIALIZATION ============
   useEffect(() => {
     const tutorialShown = localStorage.getItem("task_tutorial_shown");
     if (!tutorialShown) {
@@ -100,6 +85,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     }
   }, []);
 
+  // ============ REWARD SYSTEM ============
   const updateUserRewards = async (coinsEarned, xpEarned, message, isMilestone = false) => {
     console.log(`📊 GIVING REWARDS: +${coinsEarned} coins, +${xpEarned} XP`);
     
@@ -155,6 +141,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     return d;
   };
 
+  // ============ QUESTS & MILESTONES ============
   const checkAndAwardMilestones = (updatedTasks) => {
     console.log("🔍 Checking milestones...");
     
@@ -162,6 +149,7 @@ function TodoCalendarWithQuests({ currentUser }) {
       const taskDate = t.deadline ? t.deadline.split('T')[0] : t.deadline;
       return taskDate === todayStr && t.status === "completed";
     });
+
     const dailyCompleted = todayTasks.length;
     
     if (dailyCompleted >= 5 && !claimedDailyMilestone) {
@@ -184,6 +172,7 @@ function TodoCalendarWithQuests({ currentUser }) {
       const taskDate = new Date(t.deadline);
       return taskDate >= weekStart && taskDate <= weekEnd;
     });
+
     const weeklyCompleted = weekTasks.length;
     
     if (weeklyCompleted >= 20 && !claimedWeeklyMilestone) {
@@ -202,7 +191,8 @@ function TodoCalendarWithQuests({ currentUser }) {
     return false;
   };
 
-  // Load tasks from backend
+
+  // ============ BACKEND API CALLS ============
   const loadTasksFromBackend = async () => {
     if (!currentUser?.id) return [];
     try {
@@ -316,7 +306,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     }
   };
 
-  // Reset milestone claims
+  // ============ MILESTONE RESET ON NEW DAY/WEEK ============
   useEffect(() => {
     if (!isLoading) {
       const savedDailyDate = localStorage.getItem("claimed_daily_date");
@@ -383,13 +373,13 @@ function TodoCalendarWithQuests({ currentUser }) {
         const savedWeeklyClaim = localStorage.getItem("claimed_weekly_milestone");
         setClaimedWeeklyMilestone(savedWeeklyClaim === "true");
       }
-      
       setIsLoading(false);
     };
     
     loadData();
   }, [currentUser]);
 
+  // ============ CALENDAR NAVIGATION ============
   const goToPreviousMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -413,6 +403,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     setCurrentYear(today.getFullYear());
   };
 
+  // ============ TASK MANAGEMENT ============
   const addTask = async () => {
     if (!newTask.trim()) return;
     
@@ -503,6 +494,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     window.dispatchEvent(new CustomEvent('tasksUpdated'));
   };
 
+  // ============ EVENT MANAGEMENT ============
   const addEvent = async () => {
     if (!eventTitle.trim()) return;
     const formattedDate = eventDate || todayStr;

@@ -18,14 +18,12 @@
   padding: 40px 20px;
 }
 
-/* Main container for quests content (narrow) */
 .quests-main-content {
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
 }
 
-/* Separate wider container for calendar */
 .calendar-wrapper {
   width: 100%;
   max-width: 1200px;
@@ -104,7 +102,6 @@
   width: 100%;
 }
 
-/* Responsive column widths */
 @media (min-width: 900px) {
   .calendar-grid {
     grid-template-columns: repeat(7, minmax(120px, 1fr));
@@ -163,7 +160,6 @@
   flex-shrink: 0;
 }
 
-/* Scrollable tasks list */
 .calendar-tasks-list {
   flex: 1;
   overflow-y: auto;
@@ -187,7 +183,6 @@
   border-radius: 4px;
 }
 
-/* Calendar chips - with text wrapping */
 .calendar-chip {
   font-size: 10px;
   padding: 4px 6px;
@@ -235,7 +230,6 @@
   color: #E24B4A;
 }
 
-/* View All Button */
 .view-all-btn {
   background: #4E56C0;
   color: white;
@@ -254,7 +248,6 @@
   background: #8890d8;
 }
 
-/* Rest of your existing styles remain unchanged below */
 .quests-card {
   width: 100%;
   max-width: 700px;
@@ -351,7 +344,6 @@
   margin-bottom: 12px;
 }
 
-/* Original task-item (kept for compatibility) */
 .task-item, .event-item {
   display: flex;
   align-items: center;
@@ -473,7 +465,6 @@
   font-size: 16px;
 }
 
-/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -559,7 +550,6 @@
   color: var(--quest-accent);
 }
 
-/* Day Modal */
 .day-modal {
   max-width: 500px;
   width: 90%;
@@ -575,7 +565,6 @@
   margin-bottom: 8px;
 }
 
-/* Reward Toast */
 .reward-toast {
   position: fixed;
   top: 80px;
@@ -638,7 +627,6 @@
   100% { transform: translateX(-50%) scale(1); }
 }
 
-/* ===== ENHANCED TASK ITEM STYLES - CLEAN ONE LINE ===== */
 .task-item-enhanced {
   display: flex;
   align-items: center;
@@ -776,7 +764,6 @@
   transform: scale(1.05);
 }
 
-/* Progress Steps - compact horizontal */
 .task-progress {
   margin-top: 6px;
   background: #f8f9fa;
@@ -827,7 +814,6 @@
   display: none;
 }
 
-/* Help Tip */
 .help-tip {
   background: #E3F2FD;
   padding: 12px;
@@ -847,7 +833,6 @@
   100% { opacity: 0; transform: translateY(-10px); }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .quests-root {
     padding: 20px 12px;
@@ -885,7 +870,6 @@
   }
 }
 
-/* Permanent Instructions Box */
 .instructions-permanent {
   background: var(--quest-bg-tint);
   border: 2px solid var(--quest-accent);

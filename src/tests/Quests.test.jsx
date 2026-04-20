@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import TodoCalendarWithQuests from "../pages/Quests";
 
-// Mock the entire component's API dependencies
 vi.mock("../pages/Quests", () => ({
   default: () => (
     <div>
@@ -81,5 +80,75 @@ describe("TodoCalendarWithQuests", () => {
   it("has previous month button", () => {
     render(<TodoCalendarWithQuests />);
     expect(screen.getByText("←")).toBeInTheDocument();
+  });
+});
+
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import request from 'supertest';
+import { app, prisma } from '../../backend/index.js';
+
+describe('GET /api/users/:userId/tasks', () => {
+  it('should return 200 and list of tasks', async () => {
+    prisma.task.findMany = vi.fn().mockResolvedValue([
+      { id: 1, name: 'Test Task', deadline: new Date(), status: 'uncompleted', userId: 1 }
+    ]);
+
+    const response = await request(app).get('/api/users/1/tasks');
+    
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+});
+
+describe('POST /api/users/:userId/tasks', () => {
+  it('should create a new task', async () => {
+    prisma.task.create = vi.fn().mockResolvedValue({
+      id: 1,
+      name: 'New Task',
+      deadline: new Date('2026-04-20'),
+      status: 'uncompleted',
+      userId: 1
+    });
+
+    const response = await request(app)
+      .post('/api/users/1/tasks')
+      .send({ name: 'New Task', deadline: '2026-04-20' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe('New Task');
+  });
+
+  it('should return 400 if name is missing', async () => {
+    const response = await request(app)
+      .post('/api/users/1/tasks')
+      .send({ deadline: '2026-04-20' });
+
+    expect(response.status).toBe(400);
+  });
+});
+
+describe('PATCH /api/tasks/:taskId/status', () => {
+  it('should update task status', async () => {
+    prisma.task.update = vi.fn().mockResolvedValue({
+      id: 1,
+      name: 'Test Task',
+      status: 'completed'
+    });
+
+    const response = await request(app)
+      .patch('/api/tasks/1/status')
+      .send({ status: 'completed' });
+
+    expect(response.status).toBe(200);
+  });
+});
+
+describe('DELETE /api/tasks/:taskId', () => {
+  it('should delete a task', async () => {
+    prisma.task.delete = vi.fn().mockResolvedValue({ id: 1 });
+
+    const response = await request(app).delete('/api/tasks/1');
+
+    expect(response.status).toBe(200);
   });
 });

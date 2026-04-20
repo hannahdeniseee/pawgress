@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import Friends from './Friends.jsx';
 import PawBackground from "../components/PawBackground";
+import "../styles/Profile.css";
 
 const Profile = ({ currentUser }) => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -22,7 +23,6 @@ const Profile = ({ currentUser }) => {
   const [error, setError] = useState(null);
   const [userRewards, setUserRewards] = useState({ coins: 0, xp: 0 });
 
-  // Load rewards from localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem("user_data");
     if (savedUser) {
@@ -33,7 +33,6 @@ const Profile = ({ currentUser }) => {
     }
   }, []);
 
-  // Listen for updates from quests
   useEffect(() => {
     const handleRewardUpdate = (event) => {
       if (event.detail) {
@@ -95,102 +94,77 @@ const Profile = ({ currentUser }) => {
     ];
 
     return (
-        <div className="profile-container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+        <div className="profile-container">
         
-        {/* Profile Header */}
-        <div className="profile-header" style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '2rem', marginTop: '5rem' }}>
-            <img 
-            src={profile.avatarUrl || user?.picture || 'https://via.placeholder.com/100'} 
-            alt="User Avatar" 
-            style={{ width: '100px', height: '100px', borderRadius: '50%' }}
-            />
+          {/* Profile Header */}
+          <div className="profile-header">
+            <img className="profile-avatar" src={profile.avatarUrl || user?.picture || 'https://via.placeholder.com/100'} alt="User Avatar" />
             <div>
-            <h2 style={{ fontFamily: "'Jersey 15', serif", color: '#4E56C0' }}>{profile.username || user?.nickname || 'Pawgress User'}</h2>
-            <p style={{ color: '#666', fontFamily: "'Jersey 15', serif" }}>Joined: {new Date(profile.createdAt).toLocaleDateString()}</p>
+              <h2 className="profile-name">{profile.username || user?.nickname || 'Pawgress User'}</h2>
+              <p className="profile-join-date">Joined: {new Date(profile.createdAt).toLocaleDateString()}</p>
             </div>
-        </div>
+          </div>
 
-        {/* Rewards Section - 2 cards in one row */}
-        <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontFamily: "'Jersey 15', serif", color: '#4E56C0', fontSize: '24px', marginBottom: '1rem' }}>💰 Your Rewards</h3>
-            <div style={{ 
-                display: 'flex', 
-                flexDirection: 'row',
-                gap: '20px', 
-                justifyContent: 'space-between'
-            }}>
-                <div style={{ 
-                    flex: 1,
-                    background: 'white',
-                    border: '2.5px solid #4E56C0',
-                    padding: '1.5rem', 
-                    borderRadius: '20px',
-                    boxShadow: '0 4px 20px rgba(100, 120, 200, 0.12)',
-                    textAlign: 'center'
-                }}>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#4E56C0', fontFamily: "'Jersey 15', serif" }}>{userRewards.coins}</div>
-                    <div style={{ color: '#8890d8', fontFamily: "'Jersey 15', serif", fontSize: '18px' }}>🐾 Coins</div>
-                </div>
-                <div style={{ 
-                    flex: 1,
-                    background: 'white',
-                    border: '2.5px solid #4E56C0',
-                    padding: '1.5rem', 
-                    borderRadius: '20px',
-                    boxShadow: '0 4px 20px rgba(100, 120, 200, 0.12)',
-                    textAlign: 'center'
-                }}>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#4E56C0', fontFamily: "'Jersey 15', serif" }}>{userRewards.xp}</div>
-                    <div style={{ color: '#8890d8', fontFamily: "'Jersey 15', serif", fontSize: '18px' }}>⭐ XP Points</div>
-                </div>
+          {/* Rewards Section - 2 cards in one row */}
+          <div className="rewards-container">
+            <h3 className="section-title">💰 Your Rewards</h3>
+            <div className="rewards-row">
+              <div className="rewards-card">
+                <div className="rewards-value">{userRewards.coins}</div>
+                <div className="rewards-label">🐾 Coins</div>
+              </div>
+              <div className="rewards-card">
+                <div className="rewards-value">{userRewards.xp}</div>
+                <div className="rewards-label">⭐ XP Points</div>
+              </div>
             </div>
-        </div>
+          </div>
 
-        {/* Pet Information */}
-        <div className="pet-section" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontFamily: "'Jersey 15', serif", color: '#4E56C0', fontSize: '24px', marginBottom: '1rem' }}>🐾 Your Companion</h3>
+          {/* Pet Information */}
+          <div className="pet-section">
+            <h3 className="section-title">🐾 Your Companion</h3>
             {profile.pet && profile.pet.length > 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', border: '2.5px solid #4E56C0', padding: '1rem', borderRadius: '20px', boxShadow: '0 4px 20px rgba(100, 120, 200, 0.12)' }}>
+              <div className="pet-card">
                 <div>
-                <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '20px', color: '#4E56C0'}}><strong>Name:</strong> {profile.pet[0].name}</p>
-                <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Type:</strong> {profile.pet[0].type}</p>
-                <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Breed:</strong> {profile.pet[0].breed}</p>
-                <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px', color: '#4E56C0' }}><strong>Adopted:</strong> {new Date(profile.pet[0].createdAt).toLocaleDateString()}</p>
+                  <p className="pet-name"><strong>Name:</strong> {profile.pet[0].name}</p>
+                  <p className="pet-info"><strong>Type:</strong> {profile.pet[0].type}</p>
+                  <p className="pet-info"><strong>Breed:</strong> {profile.pet[0].breed}</p>
+                  <p className="pet-info"><strong>Adopted:</strong> {new Date(profile.pet[0].createdAt).toLocaleDateString()}</p>
                 </div>
-            </div>
+              </div>
             ) : (
-            <div style={{ background: '#fff3cd', padding: '1rem', borderRadius: '20px', border: '2.5px solid #4E56C0', color: '#856404' }}>
-                <p style={{ fontFamily: "'Jersey 15', serif", fontSize: '18px' }}>You haven't adopted a pet yet! Head over to the selection page to find your new companion.</p>
-            </div>
+              <div className="no-pet-card">
+                <p className="no-pet-text">You haven't adopted a pet yet! Head over to the selection page to find your new companion.</p>
+              </div>
             )}
-        </div>
-        
-        {/* Statistics */}
-        <div className="stats-section" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontFamily: "'Jersey 15', serif", color: '#4E56C0', fontSize: '24px', marginBottom: '1rem' }}>📊 Journey Statistics</h3>
-            <div style={{ height: '300px', width: '100%', background: 'white', padding: '1rem', borderRadius: '20px', border: '2.5px solid #4E56C0', boxShadow: '0 4px 20px rgba(100, 120, 200, 0.12)' }}>
-            <ResponsiveContainer width="100%" height="100%">
+          </div>
+          
+          {/* Statistics */}
+          <div className="stats-section">
+            <h3 className="section-title">📊 Journey Statistics</h3>
+            <div className="stats-chart-container">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip cursor={{ fill: '#f5f5f5' }} />
-                <Legend />
-                <Bar dataKey="Account Age" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Pet Ownership" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip cursor={{ fill: '#f5f5f5' }} />
+                  <Legend />
+                  <Bar dataKey="Account Age" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Pet Ownership" fill="#82ca9d" radius={[4, 4, 0, 0]} />
                 </BarChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
             </div>
-        </div>
+          </div>
 
-        {/* Friends Section */}
-        <div className="friends-section">
-            <h3 style={{ fontFamily: "'Jersey 15', serif", color: '#4E56C0', fontSize: '24px', marginBottom: '1rem' }}>👥 Your Friends</h3>
+          {/* Friends Section */}
+          <div className="friends-section">
+            <h3 className="section-title">👥 Your Friends</h3>
             {currentUser && <Friends currentUser={currentUser} />}
-        </div>
+          </div>
 
         </div>
     );
