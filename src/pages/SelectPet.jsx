@@ -9,8 +9,29 @@ import blueBird from "../assets/blue-bird.svg";
 import yellowBird from "../assets/yellow-bird.svg";
 import pinkBird from "../assets/pink-bird.svg";
 
+import goldenDogIdle from "../assets/golden-retriever-dog-idle.gif";
+import goldenDogActive from "../assets/golden-retriever-dog-active.gif";
+import dalmatianDogIdle from "../assets/dalmatian-dog-idle.gif";
+import dalmatianDogActive from "../assets/dalmatian-dog-active.gif";
+import beagleDogIdle from "../assets/beagle-dog-idle.gif";
+import beagleDogActive from "../assets/beagle-dog-active.gif";
+
+import whiteCatIdle from "../assets/white-cat-idle.gif";
+import whiteCatActive from "../assets/white-cat-active.gif";
+import orangeCatIdle from "../assets/orange-cat-idle.gif";
+import orangeCatActive from "../assets/orange-cat-active.gif";
+import blackCatIdle from "../assets/black-cat-idle.gif";
+import blackCatActive from "../assets/black-cat-active.gif";
+
+import blueBirdIdle from "../assets/blue-bird-idle.gif";
+import blueBirdActive from "../assets/blue-bird-active.gif";
+import yellowBirdIdle from "../assets/yellow-bird-idle.gif";
+import yellowBirdActive from "../assets/yellow-bird-active.gif";
+import pinkBirdIdle from "../assets/pink-bird-idle.gif";
+import pinkBirdActive from "../assets/pink-bird-active.gif";
+
 const imageMap = {
-  "../assets/golden-retriever-dog.svg": goldenDog,
+    "../assets/golden-retriever-dog.svg": goldenDog,
   "../assets/dalmatian-dog.svg": dalmatianDog,
   "../assets/beagle-dog.svg": beagleDog,
   "../assets/white-cat.svg": whiteCat,
@@ -19,34 +40,59 @@ const imageMap = {
   "../assets/blue-bird.svg": blueBird,
   "../assets/yellow-bird.svg": yellowBird,
   "../assets/pink-bird.svg": pinkBird,
+  
+  "../assets/golden-retriever-dog-idle.gif": goldenDogIdle,
+  "../assets/golden-retriever-dog-active.gif": goldenDogActive,
+  "../assets/dalmatian-dog-idle.gif": dalmatianDogIdle,
+  "../assets/dalmatian-dog-active.gif": dalmatianDogActive,
+  "../assets/beagle-dog-idle.gif": beagleDogIdle,
+  "../assets/beagle-dog-active.gif": beagleDogActive,
+  "../assets/white-cat-idle.gif": whiteCatIdle,
+  "../assets/white-cat-active.gif": whiteCatActive,
+  "../assets/black-cat-idle.gif": blackCatIdle,
+  "../assets/black-cat-active.gif": blackCatActive,
+  "../assets/orange-cat-idle.gif": orangeCatIdle,
+  "../assets/orange-cat-active.gif": orangeCatActive,
+  "../assets/blue-bird-idle.gif": blueBirdIdle,
+  "../assets/blue-bird-active.gif": blueBirdActive,
+  "../assets/yellow-bird-idle.gif": yellowBirdIdle,
+  "../assets/yellow-bird-active.gif": yellowBirdActive,
+  "../assets/pink-bird-idle.gif": pinkBirdIdle,
+  "../assets/pink-bird-active.gif": pinkBirdActive,
+};
+
+const soundMap = {
+  dog: "/sfx-dog.wav",
+  cat: "/sfx-cat.wav",
+  bird: "/sfx-bird.wav",
 };
 
 const petData = {
   dog: {
     name: "Dog",
-    image: "../assets/golden-retriever-dog.svg",
+    image: "../assets/golden-retriever-dog.gif",
     breeds: [
-      { name: "Golden Retriever", image: "../assets/golden-retriever-dog.svg" },
-      { name: "Dalmatian", image: "../assets/dalmatian-dog.svg" },
-      { name: "Beagle", image: "../assets/beagle-dog.svg" },
+      { name: "Golden Retriever", image: "../assets/golden-retriever-dog-idle.gif", activeImage: "../assets/golden-retriever-dog-active.gif" },
+      { name: "Dalmatian", image: "../assets/dalmatian-dog-idle.gif", activeImage: "../assets/dalmatian-dog-active.gif" },
+      { name: "Beagle", image: "../assets/beagle-dog-idle.gif", activeImage: "../assets/beagle-dog-active.gif" },
     ],
   },
   cat: {
     name: "Cat",
-    image: "../assets/white-cat.svg",
+    image: "../assets/white-cat.gif",
     breeds: [
-      { name: "Black Cat", image: "../assets/black-cat.svg" },
-      { name: "Orange Cat", image: "../assets/orange-cat.svg" },
-      { name: "White Cat", image: "../assets/white-cat.svg" }
+      { name: "Black Cat", image: "../assets/black-cat-idle.gif", activeImage: "../assets/black-cat-active.gif" },
+      { name: "Orange Cat", image: "../assets/orange-cat-idle.gif", activeImage: "../assets/orange-cat-active.gif" },
+      { name: "White Cat", image: "../assets/white-cat-idle.gif", activeImage: "../assets/white-cat-active.gif" }
     ],
   },
   bird: {
     name: "Bird",
-    image: "../assets/blue-bird.svg",
+    image: "../assets/blue-bird.gif",
     breeds: [
-      { name: "Yellow Bird", image: "../assets/yellow-bird.svg" },
-      { name: "Pink Bird", image: "../assets/pink-bird.svg" },
-      { name: "Blue Bird", image: "../assets/blue-bird.svg" }
+      { name: "Yellow Bird", image: "../assets/yellow-bird-idle.gif", activeImage: "../assets/yellow-bird-active.gif" },
+      { name: "Pink Bird", image: "../assets/pink-bird-idle.gif", activeImage: "../assets/pink-bird-active.gif" },
+      { name: "Blue Bird", image: "../assets/blue-bird-idle.gif", activeImage: "../assets/blue-bird-active.gif" }
     ],
   },
 };
@@ -70,9 +116,25 @@ export default function SelectPet({ currentUser }) {
   const [selectedType, setSelectedType] = useState(null);
   const [selectedBreed, setSelectedBreed] = useState("");
   const [petName, setPetName] = useState(""); 
+  const [hoveredType, setHoveredType] = useState(null);
+  const sfxRefs = useRef({});
+
+  const getSfx = (typeKey) => {
+    if (!sfxRefs.current[typeKey]) {
+      sfxRefs.current[typeKey] = new Audio(soundMap[typeKey]);
+      sfxRefs.current[typeKey].preload = "auto";
+    }
+    return sfxRefs.current[typeKey];
+  };
 
   // Helper to check if the user already has a pet
   const hasPet = pets.length > 0;
+
+  const playTypeSound = (typeKey) => {
+    const sfx = getSfx(typeKey);
+    sfx.currentTime = 0;
+    sfx.play().catch((err) => console.warn("Audio play failed:", err));
+  };
 
   const handleTypeSelect = (typeKey) => {
     // Prevent interaction if they already have a pet
@@ -132,6 +194,13 @@ export default function SelectPet({ currentUser }) {
   const currentBreedImage = selectedType && selectedBreed 
     ? petData[selectedType].breeds.find(b => b.name === selectedBreed)?.image 
     : null;
+  
+  const getTypeButtonImage = (key, data) => {
+    if (hoveredType === key) {
+      return imageMap[data.activeImage];
+    }
+    return imageMap[data.image];
+  };
 
   return (
     <div style={{ 
@@ -201,6 +270,8 @@ export default function SelectPet({ currentUser }) {
                 <button
                   key={key}
                   onClick={() => handleTypeSelect(key)}
+                  onMouseEnter={() => setHoveredType(key)}
+                  onMouseLeave={() => setHoveredType(null)}
                   style={{
                     flex: 1,
                     padding: "15px",
@@ -215,7 +286,8 @@ export default function SelectPet({ currentUser }) {
                     gap: "10px"
                   }}
                 >
-                  <img src={imageMap[data.image]} alt={data.name} style={{ width: "50px", height: "50px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }} />
+                  <img src={getTypeButtonImage(key, data)} alt={data.name} style={{ width: "50px", height: "50px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }} />
+                  {/* <img src={imageMap[data.image]} alt={data.name} style={{ width: "50px", height: "50px", objectFit: "contain" }} onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }} /> */}
                   <span style={{ fontWeight: "bold", color: "#4E56C0", fontFamily: "'Jersey 15', serif", fontSize: "18px" }}>{data.name}</span>
                 </button>
               ))}
@@ -249,7 +321,7 @@ export default function SelectPet({ currentUser }) {
                 </select>
                 {currentBreedImage && (
                   <img 
-                    src={imageMap[currentBreedImage]}
+                    src={imageMap[petData[selectedType].breeds.find(b => b.name === selectedBreed)?.activeImage]}
                     alt="Preview" 
                     style={{ width: "80px", height: "80px", objectFit: "contain", marginTop: "10px" }}
                     onError={(e) => { e.target.style.display = 'none'; }}
