@@ -1,8 +1,4 @@
 .login-page {
-    background-image: url("website-assets/login-page.png");
-    background-size: cover; 
-    background-position: center;
-
     height: 100vh; 
     margin: 0;
 
@@ -21,7 +17,7 @@
     border-radius: 12px;
     padding: 10px 18px;
 
-    font-size: 50px;
+    font-size: 30px;
     font-weight: 600px;
     cursor: pointer;
 
@@ -31,9 +27,13 @@
 .login-page .button-container {
     display: flex;
     flex-direction: column;
-    gap: 80px;
+    gap: 50px;
     align-items: center;
-    width: 30%
+    width: 30%;
+    background: white;
+    border-radius: 50px;
+    border: 2.5px solid #4E56C0;
+    padding: 100px;
 }
 
 .logo {

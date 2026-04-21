@@ -251,3 +251,16 @@
   border-top: 1.5px solid #f0f2fc;
   margin: 0;
 }
+
+.friends-pet-preview {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 16px;
+}
+
+.friends-pet-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

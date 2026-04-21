@@ -123,7 +123,7 @@ export default function PomodoroTimer({ user }) {
     const sfx = sfxRefs.current[name];
     if (!sfx) return;
     sfx.currentTime = 0;
-    sfx.play().catch(() => {});
+    sfx.play()?.catch(() => {});
   }
 
   const getDuration = useCallback((m) => {
@@ -194,7 +194,7 @@ export default function PomodoroTimer({ user }) {
     return () => clearInterval(intervalRef.current);
   }, [running, mode, focusMins]);
 
-  // Add pomo-page class to body so App.css can suppress its background image
+  // Add pomo-page class to body so that App.css can suppress its background image
   useEffect(() => {
     document.body.classList.add('pomo-page');
     return () => document.body.classList.remove('pomo-page');
@@ -290,11 +290,14 @@ export default function PomodoroTimer({ user }) {
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - progress);
 
+  // Pomodoro timer mode colors
   const modeColors = {
     focus:  { accent: "#4E56C0", bg: "#f0f2fc", tab: "#8890d8" },
     short:  { accent: "#3a92b8", bg: "#EDF6FC", tab: "#88B8D8" },
     long:   { accent: "#8B56C0", bg: "#F2EEFC", tab: "#B088D8" },
   };
+
+  // BG variants for the 15s warning phases of each mode
   const bgVariant = warningActive                           ? "orange"
                   : (restWarningActive && mode === "short") ? "yellow"
                   : (restWarningActive && mode === "long")  ? "purple"

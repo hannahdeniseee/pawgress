@@ -53,6 +53,7 @@ app.post('/api/pets/add', async (req, res) => {
         type: req.body.type,
         breed: req.body.breed,
         image: req.body.image,
+        name: req.body.name
       },
     });
     

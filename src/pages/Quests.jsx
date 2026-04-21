@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import "../styles/Quests.css";
 
-// --- HELPERS ---
+
 const getDaysInMonth = (year, month) => {
   const date = new Date(year, month, 1);
   const days = [];
@@ -14,26 +14,18 @@ const getDaysInMonth = (year, month) => {
 
 const sBg = (s) => s === "completed" ? "#EAF3DE" : s === "in progress" ? "#FAEEDA" : "#FCEBEB";
 const sTx = (s) => s === "completed" ? "#3B6D11" : s === "in progress" ? "#854F0B" : "#A32D2D";
-const nxt = (s) => {
-  if (s === "completed") return "completed";
-  if (s === "uncompleted") return "in progress";
-  if (s === "in progress") return "completed";
-  return s;
-};
 
-// Milestone rewards
 const DAILY_MILESTONE_COINS = 50;
 const DAILY_MILESTONE_XP = 75;
 const WEEKLY_MILESTONE_COINS = 200;
 const WEEKLY_MILESTONE_XP = 300;
-
+const TASK_MIN_DURATION_MS = 0; // Set to 0 to disable timer
 const API_BASE = "http://localhost:5000/api";
 
 function TodoCalendarWithQuests({ currentUser }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toLocaleDateString('en-CA');
-
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [tasks, setTasks] = useState([]);
@@ -49,13 +41,37 @@ function TodoCalendarWithQuests({ currentUser }) {
   const [rewardNotification, setRewardNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [processingTasks, setProcessingTasks] = useState(new Set());
+  const [savingTasks, setSavingTasks] = useState(new Set()); // NEW: track tasks being saved
   const [showTutorial, setShowTutorial] = useState(false);
-  
-  // Track claimed milestones
   const [claimedDailyMilestone, setClaimedDailyMilestone] = useState(false);
   const [claimedWeeklyMilestone, setClaimedWeeklyMilestone] = useState(false);
+  const [levelUpInfo, setLevelUpInfo] = useState(null);
+  const getTaskStartKey = (taskId) => `task_start_${taskId}`;
 
-  // Show tutorial on first visit
+  const recordTaskStart = (taskId) => {
+    localStorage.setItem(getTaskStartKey(taskId), Date.now().toString());
+  };
+
+  const clearTaskStart = (taskId) => {
+    localStorage.removeItem(getTaskStartKey(taskId));
+  };
+
+  const checkTaskTimer = (taskId) => {
+    if (TASK_MIN_DURATION_MS === 0) return { allowed: true, remainingSeconds: 0 };
+    
+    const startTime = localStorage.getItem(getTaskStartKey(taskId));
+    if (!startTime) {
+      return { allowed: true, remainingSeconds: 0 };
+    }
+    const elapsed = Date.now() - parseInt(startTime, 10);
+    const remaining = TASK_MIN_DURATION_MS - elapsed;
+    if (remaining <= 0) {
+      return { allowed: true, remainingSeconds: 0 };
+    }
+    return { allowed: false, remainingSeconds: Math.ceil(remaining / 1000) };
+  };
+
+  // ============ TUTORIAL & INITIALIZATION ============
   useEffect(() => {
     const tutorialShown = localStorage.getItem("task_tutorial_shown");
     if (!tutorialShown) {
@@ -67,43 +83,91 @@ function TodoCalendarWithQuests({ currentUser }) {
     }
   }, []);
 
+  // ============ REWARD SYSTEM WITH LEVEL UP ============
   const updateUserRewards = async (coinsEarned, xpEarned, message, isMilestone = false) => {
     console.log(`📊 GIVING REWARDS: +${coinsEarned} coins, +${xpEarned} XP`);
     
-    if (currentUser?.id && coinsEarned > 0) {
-      try {
-        await fetch(`${API_BASE}/users/${currentUser.id}/coins`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: coinsEarned })
-        });
-        console.log(`✅ Synced +${coinsEarned} coins to backend`);
-      } catch (err) {
-        console.error("Failed to sync coins:", err);
-      }
-    }
-    
+    // Update localStorage IMMEDIATELY
     const savedUser = localStorage.getItem("user_data");
-    let user = { coins: 0, xp: 0 };
+    let user = { coins: 0, xp: 0, level: 1 };
     
     if (savedUser) {
       user = JSON.parse(savedUser);
     }
     
+    const oldLevel = user.level;
     user.coins = (user.coins || 0) + coinsEarned;
     user.xp = (user.xp || 0) + xpEarned;
+    
+    // Calculate new level based on XP
+    const calculateLevelFromXp = (xp) => {
+      if (xp < 100) return 1;
+      if (xp < 300) return 2;
+      if (xp < 600) return 3;
+      if (xp < 1000) return 4;
+      if (xp < 1500) return 5;
+      if (xp < 2100) return 6;
+      if (xp < 2800) return 7;
+      if (xp < 3600) return 8;
+      if (xp < 4500) return 9;
+      return 10;
+    };
+    
+    const newLevel = calculateLevelFromXp(user.xp);
+    const leveledUp = newLevel > oldLevel;
+    
+    if (leveledUp) {
+      user.level = newLevel;
+    }
+    
     localStorage.setItem("user_data", JSON.stringify(user));
     
-    setRewardNotification({ 
-      coins: coinsEarned, 
-      xp: xpEarned, 
-      message, 
-      isMilestone,
-      totalCoins: user.coins,
-      totalXp: user.xp
-    });
+    // Show notification
+    if (leveledUp) {
+      setRewardNotification({ 
+        coins: coinsEarned, 
+        xp: xpEarned, 
+        message: `🎉 LEVEL UP! 🎉\nYou reached Level ${newLevel}!\n+${xpEarned} XP!`,
+        isMilestone: true,
+        totalCoins: user.coins,
+        totalXp: user.xp,
+        isLevelUp: true
+      });
+      setLevelUpInfo({ oldLevel, newLevel });
+      setTimeout(() => setLevelUpInfo(null), 5000);
+    } else {
+      setRewardNotification({ 
+        coins: coinsEarned, 
+        xp: xpEarned, 
+        message, 
+        isMilestone,
+        totalCoins: user.coins,
+        totalXp: user.xp,
+        isLevelUp: false
+      });
+    }
+    
     setTimeout(() => setRewardNotification(null), 4000);
     window.dispatchEvent(new CustomEvent('userRewardsUpdated', { detail: user }));
+    
+    // Sync to backend in background
+    if (currentUser?.id) {
+      if (coinsEarned > 0) {
+        fetch(`${API_BASE}/users/${currentUser.id}/coins`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: coinsEarned })
+        }).catch(err => console.error("Failed to sync coins:", err));
+      }
+      
+      if (xpEarned > 0) {
+        fetch(`${API_BASE}/users/${currentUser.id}/xp`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ xpGained: xpEarned })
+        }).catch(err => console.error("Failed to sync XP:", err));
+      }
+    }
   };
 
   const getWeekStart = (date) => {
@@ -122,6 +186,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     return d;
   };
 
+  // ============ QUESTS & MILESTONES ============
   const checkAndAwardMilestones = (updatedTasks) => {
     console.log("🔍 Checking milestones...");
     
@@ -129,6 +194,7 @@ function TodoCalendarWithQuests({ currentUser }) {
       const taskDate = t.deadline ? t.deadline.split('T')[0] : t.deadline;
       return taskDate === todayStr && t.status === "completed";
     });
+
     const dailyCompleted = todayTasks.length;
     
     if (dailyCompleted >= 5 && !claimedDailyMilestone) {
@@ -151,6 +217,7 @@ function TodoCalendarWithQuests({ currentUser }) {
       const taskDate = new Date(t.deadline);
       return taskDate >= weekStart && taskDate <= weekEnd;
     });
+
     const weeklyCompleted = weekTasks.length;
     
     if (weeklyCompleted >= 20 && !claimedWeeklyMilestone) {
@@ -169,7 +236,8 @@ function TodoCalendarWithQuests({ currentUser }) {
     return false;
   };
 
-  // Load tasks from backend
+
+  // ============ BACKEND API CALLS ============
   const loadTasksFromBackend = async () => {
     if (!currentUser?.id) return [];
     try {
@@ -283,7 +351,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     }
   };
 
-  // Reset milestone claims
+  // ============ MILESTONE RESET ON NEW DAY/WEEK ============
   useEffect(() => {
     if (!isLoading) {
       const savedDailyDate = localStorage.getItem("claimed_daily_date");
@@ -324,7 +392,7 @@ function TodoCalendarWithQuests({ currentUser }) {
       
       const savedUser = localStorage.getItem("user_data");
       if (!savedUser) {
-        localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0 }));
+        localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0, level: 1 }));
       }
       
       const savedDailyDate = localStorage.getItem("claimed_daily_date");
@@ -350,13 +418,13 @@ function TodoCalendarWithQuests({ currentUser }) {
         const savedWeeklyClaim = localStorage.getItem("claimed_weekly_milestone");
         setClaimedWeeklyMilestone(savedWeeklyClaim === "true");
       }
-      
       setIsLoading(false);
     };
     
     loadData();
   }, [currentUser]);
 
+  // ============ CALENDAR NAVIGATION ============
   const goToPreviousMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -380,112 +448,174 @@ function TodoCalendarWithQuests({ currentUser }) {
     setCurrentYear(today.getFullYear());
   };
 
+  // ============ TASK MANAGEMENT (OPTION 1 - DISABLE DURING SAVE) ============
   const addTask = async () => {
     if (!newTask.trim()) return;
     
+    const tempId = Date.now();
     const newTaskObj = { 
+      id: tempId,
       name: newTask, 
       deadline: taskDeadline, 
       status: "uncompleted" 
     };
     
+    // Mark as saving
+    setSavingTasks(prev => new Set([...prev, tempId]));
+    
+    // Update UI immediately
+    setTasks(prev => [...prev, newTaskObj]);
+    setNewTask("");
+    
+    // Save to backend
     const savedTask = await saveTaskToBackend(newTaskObj);
     if (savedTask) {
-      setTasks(prev => [...prev, savedTask]);
-      console.log("✅ Task added to backend:", savedTask);
+      // Replace temp task with real task from backend
+      setTasks(prev => prev.map(t => t.id === tempId ? savedTask : t));
     } else {
-      console.error("Failed to save task to backend");
+      // Remove failed task
+      setTasks(prev => prev.filter(t => t.id !== tempId));
       alert("Failed to save task. Make sure backend is running.");
     }
-    setNewTask("");
+    
+    // Remove from saving set
+    setSavingTasks(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(tempId);
+      return newSet;
+    });
   };
 
   const toggleStatus = async (task) => {
-    if (processingTasks.has(task.id)) {
-      console.log(`⚠️ Task ${task.id} already processing, skipping`);
+    // Check if task is still being saved
+    if (savingTasks.has(task.id)) {
+      alert("Task is still saving, please wait...");
       return;
     }
     
+    // Prevent double clicks
+    if (processingTasks.has(task.id)) {
+      return;
+    }
+    
+    // Determine next status
+    let newStatus;
+    if (task.status === "uncompleted") {
+      newStatus = "in progress";
+    } else if (task.status === "in progress") {
+      newStatus = "completed";
+    } else {
+      return; // Already completed - do nothing
+    }
+    
+    // Timer check for completing tasks
+    if (task.status === "in progress" && newStatus === "completed") {
+      if (TASK_MIN_DURATION_MS > 0) {
+        const { allowed, remainingSeconds } = checkTaskTimer(task.id);
+        if (!allowed) {
+          const minutes = Math.floor(remainingSeconds / 60);
+          const seconds = remainingSeconds % 60;
+          alert(`Please wait ${minutes}m ${seconds}s before marking as complete.`);
+          return;
+        }
+        clearTaskStart(task.id);
+      }
+    }
+    
+    // Record start time
+    if (task.status === "uncompleted" && newStatus === "in progress") {
+      recordTaskStart(task.id);
+    }
+    
+    // Mark as processing
     setProcessingTasks(prev => new Set([...prev, task.id]));
     
-    try {
-      const next = nxt(task.status);
-      if (next === task.status) {
-        setProcessingTasks(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(task.id);
-          return newSet;
-        });
-        return;
-      }
-      
-      const success = await updateTaskStatusInBackend(task.id, next);
-      
-      if (success) {
-        setTasks(prev => {
-          const updatedTasks = prev.map(t => 
-            t.id === task.id ? { ...t, status: next } : t
-          );
-          
-          if (next === "completed" && task.status !== "completed") {
-            console.log(`🎯 TASK COMPLETED! Checking milestones...`);
-            checkAndAwardMilestones(updatedTasks);
-          }
-          
-          return updatedTasks;
-        });
-      }
-      
-      window.dispatchEvent(new CustomEvent('tasksUpdated'));
-    } finally {
-      setTimeout(() => {
-        setProcessingTasks(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(task.id);
-          return newSet;
-        });
-      }, 500);
+    // UPDATE UI IMMEDIATELY
+    const updatedTasks = tasks.map(t => 
+      t.id === task.id ? { ...t, status: newStatus } : t
+    );
+    setTasks(updatedTasks);
+    
+    // Check milestones if completed
+    if (newStatus === "completed") {
+      checkAndAwardMilestones(updatedTasks);
     }
+    
+    window.dispatchEvent(new CustomEvent('tasksUpdated'));
+    
+    // Sync to backend (don't wait)
+    updateTaskStatusInBackend(task.id, newStatus).catch(err => {
+      console.error("Failed to sync task status:", err);
+    });
+    
+    // Remove processing flag after delay
+    setTimeout(() => {
+      setProcessingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(task.id);
+        return newSet;
+      });
+    }, 500);
   };
 
   const deleteTask = async (id) => {
     const taskToDelete = tasks.find(t => t.id === id);
-    if (taskToDelete && taskToDelete.status === "completed") {
+    if (taskToDelete?.status === "completed") {
       alert("Completed tasks cannot be deleted!");
       return;
     }
     
-    await deleteTaskFromBackend(id);
+    // Check if task is still being saved
+    if (savingTasks.has(id)) {
+      alert("Task is still saving, please wait...");
+      return;
+    }
+    
+    // Update UI immediately
     setTasks(prev => prev.filter(t => t.id !== id));
+    clearTaskStart(id);
     window.dispatchEvent(new CustomEvent('tasksUpdated'));
+    
+    // Delete from backend
+    await deleteTaskFromBackend(id);
   };
 
+  // ============ EVENT MANAGEMENT ============
   const addEvent = async () => {
     if (!eventTitle.trim()) return;
     const formattedDate = eventDate || todayStr;
+    
+    const tempId = Date.now();
     const newEvent = { 
+      id: tempId,
       title: eventTitle, 
       date: formattedDate,
       time: eventTime, 
       venue: eventVenue 
     };
     
-    const savedEvent = await saveEventToBackend(newEvent);
-    if (savedEvent) {
-      setEvents(prev => [...prev, savedEvent]);
-      console.log("✅ Event added to backend:", savedEvent);
-    } else {
-      console.error("Failed to save event to backend");
-      alert("Failed to save event. Make sure backend is running.");
-    }
+    // Update UI immediately
+    setEvents(prev => [...prev, newEvent]);
     setEventTitle("");
     setEventTime("");
     setEventVenue("");
+    
+    // Save to backend
+    const savedEvent = await saveEventToBackend(newEvent);
+    if (savedEvent) {
+      setEvents(prev => prev.map(e => e.id === tempId ? savedEvent : e));
+    } else {
+      setEvents(prev => prev.filter(e => e.id !== tempId));
+      alert("Failed to save event. Make sure backend is running.");
+    }
   };
 
   const deleteEvent = async (id) => {
-    await deleteEventFromBackend(id);
+    // Update UI immediately
     setEvents(prev => prev.filter(e => e.id !== id));
+    
+    // Delete from backend
+    await deleteEventFromBackend(id);
   };
 
   const tasksByDate = useMemo(() =>
@@ -532,29 +662,30 @@ function TodoCalendarWithQuests({ currentUser }) {
   const firstDayWeekday = days[0]?.getDay() || 0;
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-  // Helper to get progress percentage for task
-  const getTaskProgress = (status) => {
-    if (status === "completed") return 100;
-    if (status === "in progress") return 50;
-    return 0;
-  };
-
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="quests-root">
-      {/* Tutorial Help Tip */}
+      {levelUpInfo && (
+        <div className="level-up-animation">
+          <div className="level-up-content">
+            <span className="level-up-icon">🎉</span>
+            <span className="level-up-text">LEVEL {levelUpInfo.newLevel}!</span>
+            <span className="level-up-icon">🎉</span>
+          </div>
+        </div>
+      )}
+
       {showTutorial && (
         <div className="help-tip">
-          💡 <strong>How to use tasks:</strong> Click the "Start Task" or "Mark Complete" buttons to change task status. 
-          Complete tasks to earn coins and XP! 🎉
+          💡 <strong>How to use tasks:</strong> Click "Start Task" to begin, then "Mark Complete" when finished! 🎉
         </div>
       )}
 
       {rewardNotification && (
-        <div className={`reward-toast ${rewardNotification.isMilestone ? 'milestone' : ''}`}>
+        <div className={`reward-toast ${rewardNotification.isMilestone ? 'milestone' : ''} ${rewardNotification.isLevelUp ? 'level-up' : ''}`}>
           <div className="reward-toast-icon">
-            {rewardNotification.isMilestone ? '🏆' : '✅'}
+            {rewardNotification.isLevelUp ? '🎮' : rewardNotification.isMilestone ? '🏆' : '✅'}
           </div>
           <div className="reward-toast-content">
             <div className="reward-toast-message">{rewardNotification.message}</div>
@@ -563,9 +694,8 @@ function TodoCalendarWithQuests({ currentUser }) {
             </div>
           </div>
         </div>
-        
       )}
-      {/* Permanent Instructions Box */}
+      
       <div className="instructions-permanent">
         <div className="instructions-permanent-header">
           <span>📋 How to use tasks</span>
@@ -575,7 +705,6 @@ function TodoCalendarWithQuests({ currentUser }) {
         </div>
       </div>
       
-      {/* Main Quests Card */}
       <div className="quests-card">
         <div className="quests-header">
           <span className="quests-title">🍅 Quests & Tasks</span>
@@ -603,21 +732,11 @@ function TodoCalendarWithQuests({ currentUser }) {
               <div className="empty-state">✨ No tasks or events today</div>
             )}
             
-            {/* Enhanced Task Items with Buttons */}
             {(tasksByDate[todayStr] || []).map((task) => (
               <div key={task.id} className="task-item-enhanced">
                 <div className="task-info">
                   <div className="task-name">{task.name}</div>
                   <div className="task-deadline">📅 Deadline: {task.deadline ? new Date(task.deadline).toLocaleDateString() : 'No deadline'}</div>
-                  
-                  {/* Progress Bar */}
-                  <div className="task-progress">
-                    <div className="step-labels">
-                      <span>Not Started</span>
-                      <span>In Progress</span>
-                      <span>Completed</span>
-                    </div>
-                  </div>
                 </div>
                 
                 <div className="task-status-control">
@@ -627,6 +746,7 @@ function TodoCalendarWithQuests({ currentUser }) {
                       <button 
                         className="action-btn start-btn"
                         onClick={() => toggleStatus(task)}
+                        disabled={savingTasks.has(task.id)}
                       >
                         Start Task →
                       </button>
@@ -639,6 +759,7 @@ function TodoCalendarWithQuests({ currentUser }) {
                       <button 
                         className="action-btn complete-btn"
                         onClick={() => toggleStatus(task)}
+                        disabled={savingTasks.has(task.id)}
                       >
                         ✓ Mark Complete
                       </button>
@@ -655,15 +776,14 @@ function TodoCalendarWithQuests({ currentUser }) {
                 <button 
                   className="delete-task-btn" 
                   onClick={() => deleteTask(task.id)}
-                  disabled={task.status === "completed"}
-                  style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
+                  disabled={task.status === "completed" || savingTasks.has(task.id)}
+                  style={{ opacity: (task.status === "completed" || savingTasks.has(task.id)) ? 0.5 : 1 }}
                 >
                   🗑️
                 </button>
               </div>
             ))}
             
-            {/* Events remain the same */}
             {(eventsByDate[todayStr] || []).map((ev) => (
               <div key={ev.id} className="event-item">
                 <div className="task-status-dot" style={{ background: "#4E56C0" }} />
@@ -696,7 +816,6 @@ function TodoCalendarWithQuests({ currentUser }) {
         </div>
       </div>
 
-      {/* Separate Wider Calendar Box */}
       <div className="calendar-wrapper">
         <div className="calendar-header">
           <div className="calendar-title">
@@ -735,8 +854,8 @@ function TodoCalendarWithQuests({ currentUser }) {
                         <button 
                           className="chip-delete" 
                           onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
-                          disabled={task.status === "completed"}
-                          style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
+                          disabled={task.status === "completed" || savingTasks.has(task.id)}
+                          style={{ opacity: (task.status === "completed" || savingTasks.has(task.id)) ? 0.5 : 1 }}
                         >
                           ×
                         </button>
@@ -772,19 +891,15 @@ function TodoCalendarWithQuests({ currentUser }) {
               <button className="modal-close" onClick={() => setSelectedEvent(null)}>×</button>
             </div>
             <div className="modal-body">
-            <p><strong>📅 Date:</strong> {selectedEvent.date}</p>
-
-            {selectedEvent.title.includes("Study Session") ? (
-              <p>
-                <strong>📝 Topics:</strong>{" "}
-                {selectedEvent.topics || "Not specified"}
-              </p>
-            ) : (
-            <>
-              <p><strong>⏰ Time:</strong> {selectedEvent.time || "Not specified"}</p>
-              <p><strong>📍 Venue:</strong> {selectedEvent.venue || "Not specified"}</p>
-            </>
-            )}
+              <p><strong>📅 Date:</strong> {selectedEvent.date}</p>
+              {selectedEvent.title.includes("Study Session") ? (
+                <p><strong>📝 Topics:</strong> {selectedEvent.topics || "Not specified"}</p>
+              ) : (
+                <>
+                  <p><strong>⏰ Time:</strong> {selectedEvent.time || "Not specified"}</p>
+                  <p><strong>📍 Venue:</strong> {selectedEvent.venue || "Not specified"}</p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -813,8 +928,8 @@ function TodoCalendarWithQuests({ currentUser }) {
                       <button 
                         className="delete-btn" 
                         onClick={() => { deleteTask(task.id); setSelectedDayDetails(null); }}
-                        disabled={task.status === "completed"}
-                        style={{ opacity: task.status === "completed" ? 0.5 : 1 }}
+                        disabled={task.status === "completed" || savingTasks.has(task.id)}
+                        style={{ opacity: (task.status === "completed" || savingTasks.has(task.id)) ? 0.5 : 1 }}
                       >
                         ×
                       </button>

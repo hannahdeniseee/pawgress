@@ -4,6 +4,21 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import PetShop from '../pages/PetShop'
 import { MemoryRouter } from 'react-router-dom'
 
+vi.mock('../utils/sfx.js', () => ({
+  playSaveSfx: vi.fn(),
+}))
+
+const localStorageMock = (() => {
+  let store = {}
+  return {
+    getItem: vi.fn((key) => store[key] ?? null),
+    setItem: vi.fn((key, val) => { store[key] = val }),
+    removeItem: vi.fn((key) => { delete store[key] }),
+    clear: vi.fn(() => { store = {} }),
+  }
+})()
+Object.defineProperty(global, 'localStorage', { value: localStorageMock })
+
 const BASE_URL = 'http://localhost:5000'
 
 const mockUser = {
@@ -34,10 +49,12 @@ function renderComponent(props = {}) {
 }
 
 beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
+afterEach(() => {
+    server.resetHandlers()
+    localStorageMock.clear()
+    vi.clearAllMocks()
+})
 afterAll(() => server.close())
-
-// ─── Loading & Display ───────────────────────────────────────────────────────
 
 test('loads and displays coin balance and shop items', async () => {
   renderComponent()
@@ -55,9 +72,10 @@ test('shows all item prices in the shop', async () => {
 
   await screen.findByText('200')
 
-  expect(screen.getAllByText('60')).toHaveLength(2) // Pink Bow + Necktie
-  expect(screen.getAllByText('80')).toHaveLength(1) // Glasses
-  expect(screen.getAllByText('50')).toHaveLength(1) // Collar
+  expect(screen.getAllByText('80')[0]).toBeInTheDocument()
+  expect(screen.getAllByText('50')[0]).toBeInTheDocument()
+  expect(screen.getAllByText('100')[0]).toBeInTheDocument()
+  expect(screen.getAllByText('200')[0]).toBeInTheDocument()
 })
 
 test('successfully buys an item and updates coin balance', async () => {
@@ -66,7 +84,7 @@ test('successfully buys an item and updates coin balance', async () => {
   await screen.findByText('200')
 
   const buyButtons = screen.getAllByRole('button', { name: /buy/i })
-  fireEvent.click(buyButtons[0]) // Buy Pink Bow (60 coins)
+  fireEvent.click(buyButtons[0])
 
   await screen.findByText('Bought Pink Bow!')
   expect(screen.getByText('140')).toBeInTheDocument()

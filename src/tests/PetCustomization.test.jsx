@@ -43,13 +43,6 @@ test('renders pet image', async () => {
   expect(petImg).toBeInTheDocument()
 })
 
-// test('renders back button linking to home', async () => {
-//   renderComponent()
-//   await screen.findByAltText('Your pet')
-//   const backBtn = screen.getByRole('link', { name: /← back/i })
-//   expect(backBtn).toHaveAttribute('href', '/')
-// })
-
 test('shows empty inventory message when user owns no accessories', async () => {
   renderComponent()
   await screen.findByAltText('Your pet')
@@ -57,34 +50,6 @@ test('shows empty inventory message when user owns no accessories', async () => 
     screen.getByText("You don't own any accessories yet. Visit the shop!"),
   ).toBeInTheDocument()
 })
-
-// test('shows error message when pet image is missing', async () => {
-//   server.use(
-//     http.get(`${BASE_URL}/api/users/:userId`, () => {
-//       return HttpResponse.json({ ...mockUser, petImage: null })
-//     }),
-//   )
-
-//   renderComponent()
-
-//   await waitFor(() => {
-//     expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
-//   })
-
-//   expect(screen.getByText('No pet yet!')).toBeInTheDocument()
-// })
-
-// test('shows error message when user data fails to load', async () => {
-//   server.use(
-//     http.get(`${BASE_URL}/api/users/:userId`, () => {
-//       return new HttpResponse(null, { status: 500 })
-//     }),
-//   )
-
-//   renderComponent()
-
-//   await screen.findByText('Failed to load user data.')
-// })
 
 test('displays owned accessories in the inventory grid', async () => {
   server.use(

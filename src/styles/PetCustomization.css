@@ -4,7 +4,7 @@
 }
 
 .customization-page {
-    background-image: url("website-assets/customization-page.png");
+    /*background-image: url("website-assets/customization-page.png");*/
     background-size: cover; 
     background-position: center;
     background-attachment: fixed;
@@ -190,7 +190,7 @@
 
 .shop-message {
     position: absolute;
-    top: 80px;
+    top: 150px;
     left: 50%;
     transform: translateX(-50%);
     background: #8890d8;
