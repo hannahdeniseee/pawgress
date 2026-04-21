@@ -904,3 +904,70 @@
 .instructions-permanent-content strong:last-child {
   background: #4CAF50;
 }
+
+.level-up-animation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  animation: levelUpPop 1s ease-out forwards;
+}
+
+.level-up-content {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-radius: 60px;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  border: 3px solid white;
+}
+
+.level-up-icon {
+  font-size: 40px;
+  animation: bounce 0.5s ease infinite;
+}
+
+.level-up-text {
+  font-size: 36px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  font-family: "Jersey 15", serif;
+}
+
+@keyframes levelUpPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
+    visibility: hidden;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.reward-toast.level-up {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+  animation: slideDown 0.3s ease-out, pulse 0.5s ease-in-out;
+}

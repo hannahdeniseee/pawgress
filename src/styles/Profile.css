@@ -144,3 +144,49 @@
   color: #dc3545;
   font-family: 'Jersey 15', serif;
 }
+
+.level-container {
+  margin-bottom: 2rem;
+}
+
+.level-card {
+  background: linear-gradient(135deg, #4E56C0 0%, #8890d8 100%);
+  padding: 1.5rem;
+  border-radius: 20px;
+  text-align: center;
+  color: white;
+  border: 2px solid #4E56C0;
+  box-shadow: 0 4px 20px rgba(100, 120, 200, 0.12);
+}
+
+.level-number {
+  font-size: 3rem;
+  font-weight: bold;
+  font-family: "Jersey 15", serif;
+}
+
+.level-xp {
+  font-size: 1.2rem;
+  margin-top: 5px;
+}
+
+.xp-progress-bar {
+  margin-top: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.xp-progress-fill {
+  background: #FFD700;
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.xp-to-next {
+  font-size: 0.9rem;
+  margin-top: 8px;
+  opacity: 0.9;
+}

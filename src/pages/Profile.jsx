@@ -23,13 +23,54 @@ const Profile = ({ currentUser }) => {
   const [error, setError] = useState(null);
   const [userRewards, setUserRewards] = useState({ coins: 0, xp: 0 });
 
+  /* ===== XP ===== */
+  const getXpToNextLevel = (xp) => {
+    if (xp < 100) return 100 - xp;
+    if (xp < 300) return 300 - xp;
+    if (xp < 600) return 600 - xp;
+    if (xp < 1000) return 1000 - xp;
+    if (xp < 1500) return 1500 - xp;
+    if (xp < 2100) return 2100 - xp;
+    if (xp < 2800) return 2800 - xp;
+    if (xp < 3600) return 3600 - xp;
+    if (xp < 4500) return 4500 - xp;
+    return 0;
+  };
+
+  const getXpProgress = (xp) => {
+    if (xp < 100) return (xp / 100) * 100;
+    if (xp < 300) return ((xp - 100) / 200) * 100;
+    if (xp < 600) return ((xp - 300) / 300) * 100;
+    if (xp < 1000) return ((xp - 600) / 400) * 100;
+    if (xp < 1500) return ((xp - 1000) / 500) * 100;
+    if (xp < 2100) return ((xp - 1500) / 600) * 100;
+    if (xp < 2800) return ((xp - 2100) / 700) * 100;
+    if (xp < 3600) return ((xp - 2800) / 800) * 100;
+    if (xp < 4500) return ((xp - 3600) / 900) * 100;
+    return 100;
+  };
+
+  // Calculate level based on XP
+  const calculateLevel = (xp) => {
+    if (xp < 100) return 1;
+    if (xp < 300) return 2;
+    if (xp < 600) return 3;
+    if (xp < 1000) return 4;
+    if (xp < 1500) return 5;
+    if (xp < 2100) return 6;
+    if (xp < 2800) return 7;
+    if (xp < 3600) return 8;
+    if (xp < 4500) return 9;
+    return 10;
+  };
+
   useEffect(() => {
     const savedUser = localStorage.getItem("user_data");
     if (savedUser) {
       const userData = JSON.parse(savedUser);
       setUserRewards({ coins: userData.coins || 0, xp: userData.xp || 0 });
     } else {
-      localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0 }));
+      localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0, level: 1 }));
     }
   }, []);
 
@@ -93,6 +134,9 @@ const Profile = ({ currentUser }) => {
         }
     ];
 
+    const currentXp = userRewards.xp;
+    const currentLevel = calculateLevel(currentXp);
+
     return (
         <div className="profile-container">
         
@@ -102,6 +146,26 @@ const Profile = ({ currentUser }) => {
             <div>
               <h2 className="profile-name">{profile.username || user?.nickname || 'Pawgress User'}</h2>
               <p className="profile-join-date">Joined: {new Date(profile.createdAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+
+          {/* Level Section - Using localStorage XP */}
+          <div className="level-container">
+            <h3 className="section-title">🏆 Your Level</h3>
+            <div className="level-card">
+              <div className="level-number">Level {currentLevel}</div>
+              <div className="level-xp">⭐ {currentXp} XP</div>
+              
+              {/* XP Progress Bar */}
+              <div className="xp-progress-bar">
+                <div 
+                  className="xp-progress-fill" 
+                  style={{ width: `${getXpProgress(currentXp)}%` }}
+                />
+              </div>
+              <div className="xp-to-next">
+                {getXpToNextLevel(currentXp)} XP to next level
+              </div>
             </div>
           </div>
 
