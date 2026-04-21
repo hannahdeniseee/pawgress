@@ -145,7 +145,7 @@ describe('POST /api/users/:userId/events (Study Planner Integration)', () => {
 
   it('should return 500 when Prisma rejects with a unique-constraint violation', async () => {
     const constraintError = new Error('Unique constraint failed on the fields: (`userId`,`date`)');
-    constraintError.code = 'P2002'; // Prisma unique-constraint error code
+    constraintError.code = 'P2002'; 
     prisma.event.create = vi.fn().mockRejectedValue(constraintError);
 
     const response = await request(app)

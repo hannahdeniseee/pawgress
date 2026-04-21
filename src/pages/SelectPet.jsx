@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import goldenDog from "../assets/golden-retriever-dog.svg";
 import dalmatianDog from "../assets/dalmatian-dog.svg";
 import beagleDog from "../assets/beagle-dog.svg";
@@ -70,25 +70,28 @@ const soundMap = {
 const petData = {
   dog: {
     name: "Dog",
-    image: "../assets/golden-retriever-dog.gif",
+    image: "../assets/golden-retriever-dog.svg",
+    activeImage: "../assets/golden-retriever-dog-active.gif",
     breeds: [
-      { name: "Golden Retriever", image: "../assets/golden-retriever-dog-idle.gif", activeImage: "../assets/golden-retriever-dog-active.gif" },
-      { name: "Dalmatian", image: "../assets/dalmatian-dog-idle.gif", activeImage: "../assets/dalmatian-dog-active.gif" },
-      { name: "Beagle", image: "../assets/beagle-dog-idle.gif", activeImage: "../assets/beagle-dog-active.gif" },
+      { name: "Golden Retriever", image: "../assets/golden-retriever-dog.svg", activeImage: "../assets/golden-retriever-dog-active.gif" },
+      { name: "Dalmatian", image: "../assets/dalmatian-dog.svg", activeImage: "../assets/dalmatian-dog-active.gif" },
+      { name: "Beagle", image: "../assets/beagle-dog.svg", activeImage: "../assets/beagle-dog-active.gif" },
     ],
   },
   cat: {
     name: "Cat",
-    image: "../assets/white-cat.gif",
+    image: "../assets/white-cat.svg",
+    activeImage: "../assets/white-cat-active.gif",
     breeds: [
-      { name: "Black Cat", image: "../assets/black-cat-idle.gif", activeImage: "../assets/black-cat-active.gif" },
-      { name: "Orange Cat", image: "../assets/orange-cat-idle.gif", activeImage: "../assets/orange-cat-active.gif" },
-      { name: "White Cat", image: "../assets/white-cat-idle.gif", activeImage: "../assets/white-cat-active.gif" }
+      { name: "Black Cat", image: "../assets/black-cat.svg", activeImage: "../assets/black-cat-active.gif" },
+      { name: "Orange Cat", image: "../assets/orange-cat.svg", activeImage: "../assets/orange-cat-active.gif" },
+      { name: "White Cat", image: "../assets/white-cat.svg", activeImage: "../assets/white-cat-active.gif" }
     ],
   },
   bird: {
     name: "Bird",
-    image: "../assets/blue-bird.gif",
+    image: "../assets/blue-bird.svg",
+    activeImage: "../assets/blue-bird-active.gif",
     breeds: [
       { name: "Yellow Bird", image: "../assets/yellow-bird-idle.gif", activeImage: "../assets/yellow-bird-active.gif" },
       { name: "Pink Bird", image: "../assets/pink-bird-idle.gif", activeImage: "../assets/pink-bird-active.gif" },
@@ -150,7 +153,7 @@ export default function SelectPet({ currentUser }) {
       return;
     }
 
-    if (!petName.trim()) {                                     // ← new validation
+    if (!petName.trim()) {
       alert("Please give your companion a name!");
       return;
     }
