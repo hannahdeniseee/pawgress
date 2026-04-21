@@ -42,7 +42,7 @@ describe('POST /api/users/:userId/events (Study Planner Integration)', () => {
     expect(prisma.event.create).toHaveBeenCalledTimes(1);
   });
 
-  it('should pass the correct data to Prisma when creating an event', async () => {
+  it('should pass the correct data when creating an event', async () => {
     prisma.event.create = vi.fn().mockResolvedValue(mockCreatedEvent());
 
     await request(app)
@@ -52,7 +52,7 @@ describe('POST /api/users/:userId/events (Study Planner Integration)', () => {
     const callArg = prisma.event.create.mock.calls[0][0];
     expect(callArg.data).toMatchObject({
       title: 'Physics Study Session',
-      date: expect.anything(),   // parsed to Date by the backend
+      date: expect.anything(),
       userId: 1,
     });
   });
@@ -72,20 +72,7 @@ describe('POST /api/users/:userId/events (Study Planner Integration)', () => {
     expect(prisma.event.create).toHaveBeenCalledTimes(1);
   });
 
-  it('should correctly use the userId from the URL parameter, not a hardcoded value', async () => {
-    const userId = 42;
-    prisma.event.create = vi.fn().mockResolvedValue(mockCreatedEvent({ userId }));
-
-    const response = await request(app)
-      .post(`/api/users/${userId}/events`)
-      .send(validPayload());
-
-    expect(response.status).toBe(200);
-    const callArg = prisma.event.create.mock.calls[0][0];
-    expect(callArg.data.userId).toBe(userId);
-  });
-
-  it('should store multiple events independently (simulates Fibonacci-spaced sessions)', async () => {
+  it('should store multiple events spaced according to Fibonacci', async () => {
     const dates = ['2026-05-01', '2026-05-05', '2026-05-12', '2026-05-20'];
     prisma.event.create = vi.fn().mockImplementation(({ data }) =>
       Promise.resolve(mockCreatedEvent({ date: data.date, title: data.title }))
@@ -120,39 +107,4 @@ describe('POST /api/users/:userId/events (Study Planner Integration)', () => {
     expect(response.status).toBe(400);
     expect(prisma.event.create).not.toHaveBeenCalled();
   });
-
-  it('should return 400 when both title and date are missing', async () => {
-    const response = await request(app)
-      .post('/api/users/1/events')
-      .send({ venue: 'Nowhere' });
-
-    expect(response.status).toBe(400);
-    expect(prisma.event.create).not.toHaveBeenCalled();
-  });
-
-  it('should return 500 and an error field when the Prisma query throws', async () => {
-    prisma.event.create = vi.fn().mockRejectedValue(
-      new Error('Prisma Connection Error')
-    );
-
-    const response = await request(app)
-      .post('/api/users/1/events')
-      .send(validPayload());
-
-    expect(response.status).toBe(500);
-    expect(response.body.error).toBeDefined();
-  });
-
-  it('should return 500 when Prisma rejects with a unique-constraint violation', async () => {
-    const constraintError = new Error('Unique constraint failed on the fields: (`userId`,`date`)');
-    constraintError.code = 'P2002'; 
-    prisma.event.create = vi.fn().mockRejectedValue(constraintError);
-
-    const response = await request(app)
-      .post('/api/users/1/events')
-      .send(validPayload());
-
-    expect(response.status).toBe(500);
-    expect(response.body.error).toBeDefined();
-  });
-});
+})

@@ -15,6 +15,10 @@ import pinkBow from "../assets/pink-bow.svg";
 import necktie from "../assets/necktie.svg";
 import glasses from "../assets/glasses.svg";
 import collar from "../assets/collar.svg";
+import crown from "../assets/crown.svg";
+import cap from "../assets/cap.svg";
+import starGlasses from "../assets/star-glasses.svg";
+import flowerGarland from "../assets/flower-garland.svg";
 import platform from "../assets/platform.svg";
 
 const SHOP_ITEMS = [
@@ -22,11 +26,15 @@ const SHOP_ITEMS = [
   { id: 2, name: "Necktie", price: 60, image: necktie, slot: "neck" },
   { id: 3, name: "Glasses", price: 80, image: glasses, slot: "face" },
   { id: 4, name: "Collar", price: 50, image: collar, slot: "neck" },
+  { id: 5, name: "Crown", price: 200, image: crown, slot: "head" },
+  { id: 6, name: "Cap", price: 60, image: cap, slot: "head" },
+  { id: 7, name: "Star Glasses", price: 100, image: starGlasses, slot: "face" },
+  { id: 8, name: "Flower Garland", price: 60, image: flowerGarland, slot: "neck" },
 ];
 
 // Map accessory image positions, consistent throughout all 3 pets
 const SLOT_POSITIONS = {
-  head: { position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "80px", zIndex: 10 },
+  head: { position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "100px", zIndex: 10 },
   neck: { position: "absolute", top: "57%", left: "50%", transform: "translateX(-50%)", height: "70px", zIndex: 10 },
   face: { position: "absolute", top: "34%", left: "50%", transform: "translateX(-50%)", width: "180px", zIndex: 10 },
 };

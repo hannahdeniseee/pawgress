@@ -47,7 +47,7 @@ function AppContent() {
     }
   }, [isAuthenticated, user]);
 
-  if (isLoading) return <div style={{ color: '#f0ebe6', fontFamily: 'sans-serif', padding: '2rem' }}>Loading...</div>;
+  if (isLoading) return <div style={{ color: '#000000', fontFamily: 'sans-serif', padding: '2rem' }}>Loading...</div>;
 
   if (!isAuthenticated) {
     return <Login />;
@@ -57,16 +57,18 @@ function AppContent() {
 
   const HomePage = () => (
     <>
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
+    <div style={{ position: 'relative', zIndex: 1, width: '100%', margin: 0, padding: 0 }}>
+
+      {/* Pet Selection */}
+      {dbUser && <SelectPet currentUser={dbUser} />}
+
+      {/* Pomodoro Timer */}
       <PomodoroTimer user={currentUser} />
 
+      {/* Tutorial Button (lower right) */}
       <TutorialHelpButton />
       
-      {/* SelectPet component - it should already have "My Companion" inside it */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        {dbUser && <SelectPet currentUser={dbUser} />}
-      </div>
-      
+      {/* Study Planner */}
       <Quest currentUser={currentUser} />  
       {dbUser && <StudyPlanner userId={dbUser.id} />}
     </div>
@@ -81,7 +83,7 @@ function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={dbUser ? <PetShop userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/customization" element={dbUser ? <PetCustomization userId={dbUser.id} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
-        <Route path="/profile" element={dbUser ? <Profile currentUser={dbUser} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />  {/* ← CHANGED from Social to Profile */}
+        <Route path="/profile" element={dbUser ? <Profile currentUser={dbUser} /> : <div style={{color: 'white', textAlign: 'center'}}>Loading...</div>} />
         <Route path="/help" element={<HelpPage />} />
       </Routes>
     </Router>

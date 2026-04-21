@@ -7,14 +7,22 @@ import pinkBow from "../assets/pink-bow.svg";
 import necktie from "../assets/necktie.svg";
 import glasses from "../assets/glasses.svg";
 import collar from "../assets/collar.svg";
+import crown from "../assets/crown.svg";
+import cap from "../assets/cap.svg";
+import starGlasses from "../assets/star-glasses.svg";
+import flowerGarland from "../assets/flower-garland.svg";
 import coin from "../assets/coin.svg";
 import shopBanner from "../styles/website-assets/shop-banner.png"
 
 const SHOP_ITEMS = [
   { id: 1, name: "Pink Bow", price: 60, image: pinkBow, slot: "head" },
   { id: 2, name: "Necktie", price: 60, image: necktie, slot: "neck" },
-  { id: 3, name: "Glasses", price: 80, image: glasses, slot: "head" },
-  { id: 4, name: "Collar", price: 50, image: collar, slot: "head" },
+  { id: 3, name: "Glasses", price: 80, image: glasses, slot: "face" },
+  { id: 4, name: "Collar", price: 50, image: collar, slot: "neck" },
+  { id: 5, name: "Crown", price: 200, image: crown, slot: "head" },
+  { id: 6, name: "Cap", price: 60, image: cap, slot: "head" },
+  { id: 7, name: "Star Glasses", price: 100, image: starGlasses, slot: "face" },
+  { id: 8, name: "Flower Garland", price: 60, image: flowerGarland, slot: "neck" },
 ];
 
 const API = "http://localhost:5000/api";
@@ -105,7 +113,7 @@ export default function PetAccessoryShop({ userId }) {
         body: JSON.stringify({ amount: -item.price }), 
       });
 
-      const { coins: newCoins } = await coinRes.json;
+      const { coins: newCoins } = await coinRes.json();
       setCoins(newCoins);
       setLocalCoins(newCoins); // Update local storage
       

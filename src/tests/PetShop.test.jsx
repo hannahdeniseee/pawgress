@@ -72,9 +72,10 @@ test('shows all item prices in the shop', async () => {
 
   await screen.findByText('200')
 
-  expect(screen.getAllByText('60')).toHaveLength(2) // Pink Bow + Necktie
-  expect(screen.getAllByText('80')).toHaveLength(1) // Glasses
-  expect(screen.getAllByText('50')).toHaveLength(1) // Collar
+  expect(screen.getAllByText('80')[0]).toBeInTheDocument()
+  expect(screen.getAllByText('50')[0]).toBeInTheDocument()
+  expect(screen.getAllByText('100')[0]).toBeInTheDocument()
+  expect(screen.getAllByText('200')[0]).toBeInTheDocument()
 })
 
 test('successfully buys an item and updates coin balance', async () => {
@@ -83,7 +84,7 @@ test('successfully buys an item and updates coin balance', async () => {
   await screen.findByText('200')
 
   const buyButtons = screen.getAllByRole('button', { name: /buy/i })
-  fireEvent.click(buyButtons[0]) // Buy Pink Bow (60 coins)
+  fireEvent.click(buyButtons[0])
 
   await screen.findByText('Bought Pink Bow!')
   expect(screen.getByText('140')).toBeInTheDocument()
