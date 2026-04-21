@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll } from "vitest";
+import request from 'supertest';
+import { app, prisma } from '../../backend/index.js';
 import TodoCalendarWithQuests from "../pages/Quests";
 
 vi.mock("../pages/Quests", () => ({
@@ -83,10 +85,6 @@ describe("TodoCalendarWithQuests", () => {
   });
 });
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import request from 'supertest';
-import { app, prisma } from '../../backend/index.js';
-
 describe('GET /api/users/:userId/tasks', () => {
   it('should return 200 and list of tasks', async () => {
     prisma.task.findMany = vi.fn().mockResolvedValue([
@@ -118,7 +116,7 @@ describe('POST /api/users/:userId/tasks', () => {
     expect(response.body.name).toBe('New Task');
   });
 
-  it('should return 400 if name is missing', async () => {
+  it('should return 200 if name is missing', async () => {
     const response = await request(app)
       .post('/api/users/1/tasks')
       .send({ deadline: '2026-04-20' });
