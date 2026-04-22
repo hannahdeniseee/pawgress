@@ -1,9 +1,9 @@
 import { useState } from "react";
 import "../styles/StudyPlanner.css";
 
-export default function StudyPlan({ onPlanCreated }) {
+export default function StudyPlan({ onPlanCreated, currentUser  }) {
   const API_BASE = "http://localhost:5000/api";
-  const userId = 1;
+  const userId = currentUser?.id;
 
   const [examDate, setExamDate] = useState("");
   const [studyMode, setStudyMode] = useState("auto");
@@ -18,36 +18,31 @@ export default function StudyPlan({ onPlanCreated }) {
     const exam = new Date(year, month - 1, day);
     const dates = [];
 
-    let fib = [1, 2];
-
-    fib.forEach((daysBefore) => {
-      const d = new Date(exam);
-      d.setDate(d.getDate() - daysBefore);
-      if (d >= today) dates.push(d);
-    });
-
+    let a = 1, b = 2;
     while (true) {
-      const next = fib[fib.length - 1] + fib[fib.length - 2];
-      fib.push(next);
-
       const d = new Date(exam);
-      d.setDate(d.getDate() - next);
-
+      d.setDate(d.getDate() - a);
       if (d < today) break;
-
       dates.push(d);
+      [a, b] = [b, a + b];
+    }
+
+    if (dates.length === 0) {
+      alert("Exam is too soon to generate a study plan.");
+      return [];
     }
 
     return dates;
   };
 
   const generatePlan = async (event) => {
-    if (!examDate) return;
+    if (!examDate || !userId) return;
 
     let dates = [];
 
     if (studyMode === "auto") {
       dates = generateStudyDates(examDate);
+      if (dates.length === 0) return;
     } else {
       dates = selectedDates.map((d) => new Date(d));
     }
@@ -129,7 +124,7 @@ export default function StudyPlan({ onPlanCreated }) {
 
         <div className="input-group">
           <label>Topics: </label>
-          <textArea
+          <textarea
             value={topics}
             onChange={(e) => setTopics(e.target.value)}
           />
