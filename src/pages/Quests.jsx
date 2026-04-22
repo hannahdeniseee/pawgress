@@ -19,7 +19,7 @@ const DAILY_MILESTONE_COINS = 50;
 const DAILY_MILESTONE_XP = 75;
 const WEEKLY_MILESTONE_COINS = 200;
 const WEEKLY_MILESTONE_XP = 300;
-const TASK_MIN_DURATION_MS = 0; // Set to 0 to disable timer
+const TASK_MIN_DURATION_MS = 300000;
 const API_BASE = "http://localhost:5000/api";
 
 function TodoCalendarWithQuests({ currentUser }) {
@@ -61,7 +61,7 @@ function TodoCalendarWithQuests({ currentUser }) {
     
     const startTime = localStorage.getItem(getTaskStartKey(taskId));
     if (!startTime) {
-      return { allowed: true, remainingSeconds: 0 };
+      return { allowed: false, remainingSeconds: Math.ceil(TASK_MIN_DURATION_MS / 1000) };
     }
     const elapsed = Date.now() - parseInt(startTime, 10);
     const remaining = TASK_MIN_DURATION_MS - elapsed;

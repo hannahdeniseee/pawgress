@@ -166,6 +166,7 @@
 }
 
 .level-xp {
+  font-family: 'Jersey 15', serif;
   font-size: 1.2rem;
   margin-top: 5px;
 }
@@ -189,4 +190,5 @@
   font-size: 0.9rem;
   margin-top: 8px;
   opacity: 0.9;
+  font-family: 'Jersey 15', serif;
 }

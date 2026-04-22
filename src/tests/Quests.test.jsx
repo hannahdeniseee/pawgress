@@ -4,7 +4,6 @@ import request from 'supertest';
 import { app, prisma } from '../../backend/index.js';
 import TodoCalendarWithQuests from "../pages/Quests";
 
-// Mock the Quests component for simple rendering tests
 vi.mock("../pages/Quests", () => ({
   default: () => (
     <div>
@@ -180,7 +179,7 @@ describe('PATCH /api/users/:userId/coins', () => {
   });
 });
 
-// ========== LEVEL CALCULATION TESTS (Frontend logic only) ==========
+// ========== LEVEL CALCULATION TESTS ==========
 describe('Level Calculation Logic', () => {
   it('should calculate correct level based on XP', () => {
     const calculateLevel = (xp) => {
@@ -301,4 +300,77 @@ describe('Milestone Rewards', () => {
     expect(WEEKLY_MILESTONE_COINS).toBe(200);
     expect(WEEKLY_MILESTONE_XP).toBe(300);
   });
+});
+
+// ========== LEVEL SYSTEM ENDPOINTS ==========
+
+function calculateLevel(xp) {
+  if (xp < 100) return 1;
+  if (xp < 300) return 2;
+  if (xp < 600) return 3;
+  if (xp < 1000) return 4;
+  if (xp < 1500) return 5;
+  if (xp < 2100) return 6;
+  if (xp < 2800) return 7;
+  if (xp < 3600) return 8;
+  if (xp < 4500) return 9;
+  return 10;
+}
+
+app.patch("/api/users/:id/xp", async (req, res) => {
+  const { id } = req.params;
+  const { xpGained } = req.body;
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    const newXp = (user.xp || 0) + xpGained;
+    const newLevel = calculateLevel(newXp);
+    const leveledUp = newLevel > (user.level || 1);
+    const oldLevel = user.level || 1;
+    
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(id) },
+      data: { 
+        xp: newXp,
+        level: newLevel
+      }
+    });
+    
+    res.json({ 
+      xp: updatedUser.xp, 
+      level: updatedUser.level,
+      leveledUp: leveledUp,
+      oldLevel: oldLevel
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "XP update error" });
+  }
+});
+
+app.get("/api/users/:id/level", async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) },
+      select: { xp: true, level: true }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.json({ xp: user.xp || 0, level: user.level || 1 });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to get level" });
+  }
 });
