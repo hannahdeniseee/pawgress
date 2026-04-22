@@ -248,6 +248,14 @@ export default function PomodoroTimer({ user }) {
       setNotification({ type: "focus", coins, xp });
       setSessionsToday((s) => s + 1);
 
+      const savedUser = localStorage.getItem("user_data");
+      const userData = savedUser ? JSON.parse(savedUser) : { coins: 0, xp: 0, level: 1 };
+      userData.coins = (userData.coins || 0) + coins;
+      userData.xp = (userData.xp || 0) + xp;
+      localStorage.setItem("user_data", JSON.stringify(userData));
+
+      window.dispatchEvent(new CustomEvent('userRewardsUpdated', { detail: userData }));
+
       // Award coins to the backend when a focus session is completed
       if (user?.id) {
         fetch(`http://localhost:5000/api/users/${user.id}/coins`, {
@@ -255,6 +263,12 @@ export default function PomodoroTimer({ user }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ amount: coins }),
         }).catch((err) => console.error("Failed to award coins:", err));
+
+        fetch(`http://localhost:5000/api/users/${user.id}/xp`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ xpGained: xp }),
+      }).catch((err) => console.error("Failed to award XP:", err));
       }
     } else {
       setNotification({ type: "break" });

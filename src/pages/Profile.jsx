@@ -69,10 +69,8 @@ const Profile = ({ currentUser }) => {
     if (savedUser) {
       const userData = JSON.parse(savedUser);
       setUserRewards({ coins: userData.coins || 0, xp: userData.xp || 0 });
-    } else {
-      localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0, level: 1 }));
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const handleRewardUpdate = (event) => {

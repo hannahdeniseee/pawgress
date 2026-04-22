@@ -87,6 +87,11 @@ function TodoCalendarWithQuests({ currentUser }) {
   const updateUserRewards = async (coinsEarned, xpEarned, message, isMilestone = false) => {
     console.log(`📊 GIVING REWARDS: +${coinsEarned} coins, +${xpEarned} XP`);
     
+    const savedAuthId = localStorage.getItem("auth_user_id");
+    if (currentUser?.id && savedAuthId !== String(currentUser.id)) {
+      localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0, level: 1 }));
+      localStorage.setItem("auth_user_id", String(currentUser.id));
+    }
     // Update localStorage IMMEDIATELY
     const savedUser = localStorage.getItem("user_data");
     let user = { coins: 0, xp: 0, level: 1 };

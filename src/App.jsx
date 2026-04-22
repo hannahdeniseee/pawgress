@@ -47,6 +47,18 @@ function AppContent() {
     }
   }, [isAuthenticated, user]);
 
+  useEffect(() => {
+  if (user?.sub) {
+    const savedAuthId = localStorage.getItem("auth_user_id");
+    if (savedAuthId !== user.sub) {
+      localStorage.setItem("user_data", JSON.stringify({ coins: 0, xp: 0, level: 1 }));
+      localStorage.setItem("auth_user_id", user.sub);
+      localStorage.setItem("claimed_daily_milestone", "false");
+      localStorage.setItem("claimed_weekly_milestone", "false");
+    }
+  }
+}, [user]);
+
   if (isLoading) return <div style={{ color: '#000000', fontFamily: 'sans-serif', padding: '2rem' }}>Loading...</div>;
 
   if (!isAuthenticated) {
@@ -70,7 +82,8 @@ function AppContent() {
       
       {/* Study Planner */}
       <Quest currentUser={currentUser} />  
-      {dbUser && <StudyPlanner userId={dbUser.id} />}
+      {dbUser && <StudyPlanner onPlanCreated={() => {}} currentUser={dbUser} />}
+
     </div>
     </>
   );
